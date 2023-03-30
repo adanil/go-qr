@@ -2,6 +2,8 @@ package qr_encode
 
 import (
 	"bytes"
+	"fmt"
+
 	"github.com/psxzz/go-qr/pkg/algorithms"
 	"go.uber.org/multierr"
 )
@@ -28,6 +30,19 @@ func (e *Encoder) Encode(text string) ([]byte, error) {
 	return result, nil
 }
 
+func (e *Encoder) Encode2D(text string) (*QRCode, error) {
+	data, err := e.Encode(text)
+
+	if err != nil {
+		return nil, fmt.Errorf("encode1d: %v", err)
+	}
+
+	grid := NewQRCode(e, data)
+	grid.MakeLayout()
+
+	return grid, nil
+}
+
 func (e *Encoder) getVersion(byteLen int) (int, error) {
 	bitLen := byteLen*8 + 4 // nolint:gomnd
 	versionsArray := versionSize[e.level]
@@ -47,7 +62,7 @@ func (e *Encoder) getVersion(byteLen int) (int, error) {
 			return -1, ErrTooLargeSize
 		}
 	}
-	return version, nil
+	return version + 1, nil
 }
 
 // nolint:gomnd
