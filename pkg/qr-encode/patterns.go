@@ -7,8 +7,8 @@ const (
 
 type Pattern struct {
 	data  [][]Pixel
-	xSize uint
-	ySize uint
+	xSize int
+	ySize int
 }
 
 var (

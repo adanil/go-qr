@@ -105,7 +105,7 @@ var (
 	}
 
 	// codeVersion -> alignment pattern locations
-	alignmentPatterns = map[int][]uint{
+	alignmentPatterns = map[int][]int{
 		1: {}, 2: {18}, 3: {22}, 4: {26}, 5: {30}, 6: {34},
 		7: {6, 22, 38}, 8: {6, 24, 42},
 		9: {6, 26, 46}, 10: {6, 28, 50},
@@ -182,5 +182,17 @@ var (
 			0b001011010001001, 0b001001110111110, 0b001110011100111, 0b001100111010000,
 			0b000011101100010, 0b000001001010101, 0b000110100001100, 0b000100000111011,
 		},
+	}
+
+	// mask version -> mask function
+	maskFunctions = [8]func(int, int) int{
+		func(x, y int) int { return (x + y) % 2 },
+		func(x, y int) int { return y % 2 },
+		func(x, y int) int { return x % 3 },
+		func(x, y int) int { return (x + y) % 3 },
+		func(x, y int) int { return (x/3 + y/2) % 2 },
+		func(x, y int) int { return (x*y)%2 + (x*y)%3 },
+		func(x, y int) int { return ((x*y)%2 + (x*y)%3) % 2 },
+		func(x, y int) int { return ((x*y)%3 + (x+y)%2) % 2 },
 	}
 )

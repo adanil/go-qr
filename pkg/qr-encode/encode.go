@@ -40,6 +40,12 @@ func (e *Encoder) Encode2D(text string) (*QRCode, error) {
 	grid := NewQRCode(e, data)
 	grid.MakeLayout()
 
+	_, err = grid.Write(data)
+
+	if err != nil {
+		return nil, fmt.Errorf("write: %v", err)
+	}
+
 	return grid, nil
 }
 
