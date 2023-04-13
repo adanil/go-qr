@@ -9,8 +9,10 @@ import (
 
 // TODO: Get rid of magic numbers and make it constant
 const (
-	versionPadding = 11
-	syncPadding    = 7
+	versionOneSize     = 21
+	versionSizePadding = 7
+	versionPadding     = 11
+	syncPadding        = 7
 )
 
 type Pixel bool
@@ -37,6 +39,7 @@ type QRCode struct {
 	data       []byte
 	version    int
 	correction CodeLevel
+	pattern    int
 
 	canvas [][]Module
 	size   int
@@ -45,12 +48,12 @@ type QRCode struct {
 }
 
 func NewQRCode(e *Encoder, data []byte) *QRCode {
-	canvasSize := 21 // base canvas size for e.version == 1
+	canvasSize := versionOneSize // base canvas size for e.version == 1
 	alignments := alignmentPatterns[e.version]
 
 	if e.version != 1 {
 		aLen := len(alignments)
-		canvasSize = alignments[aLen-1] + 7
+		canvasSize = alignments[aLen-1] + versionSizePadding
 	}
 
 	var canvas [][]Module = make([][]Module, canvasSize)
@@ -68,6 +71,7 @@ func NewQRCode(e *Encoder, data []byte) *QRCode {
 	return &QRCode{
 		data:       data,
 		version:    e.version,
+		pattern:    0,
 		correction: e.level,
 		canvas:     canvas,
 		size:       canvasSize,
@@ -81,17 +85,19 @@ func (g *QRCode) String() string {
 	buf.WriteByte('{')
 	fmt.Fprintf(&buf, "\nversion: %v", g.version)
 	fmt.Fprintf(&buf, "\nerror correction: %v", g.correction)
+	fmt.Fprintf(&buf, "\nmask pattern: %v", g.pattern)
 	fmt.Fprintf(&buf, "\nalignments: %v", g.alignments)
 	fmt.Fprintf(&buf, "\ndata: ")
 
-	for i, row := range g.canvas {
-		fmt.Fprintf(&buf, "\n%d:\t", i)
+	for _, row := range g.canvas {
+		buf.WriteString("\n\t\t")
+		// fmt.Fprintf(&buf, "\n%d:\t", i)
 		for _, v := range row {
 			fmt.Fprintf(&buf, "%v", v.value)
 		}
 	}
 
-	buf.WriteByte('}')
+	buf.WriteString("\n}")
 
 	return buf.String()
 }
@@ -105,15 +111,18 @@ func (g *QRCode) MakeLayout() {
 		g.placeVersion()
 	}
 
-	g.Write(g.data)
-
 	g.placeMask()
+
+	// g.Write(g.data)
+
 }
 
 func (g *QRCode) Write(bytes []byte) (int, error) {
 	var n int
 	xl, xr := g.size-2, g.size-1
 	upwards := true
+
+	mask := maskFunctions[g.pattern]
 	nextBit := g.bitsGenerator() // convert encoded data to bit flow
 
 	for xl >= 0 {
@@ -128,11 +137,24 @@ func (g *QRCode) Write(bytes []byte) (int, error) {
 
 		for y != border {
 			if !g.canvas[y][xr].isUsed {
-				g.canvas[y][xr].Set(Pixel(!nextBit()))
+				bit := !nextBit()
+
+				if mask(xr, y) == 0 {
+					bit = !bit
+				}
+
+				g.canvas[y][xr].Set(Pixel(bit))
+
 			}
 
 			if !g.canvas[y][xl].isUsed {
-				g.canvas[y][xl].Set(Pixel(!nextBit()))
+				bit := !nextBit()
+
+				if mask(xl, y) == 0 {
+					bit = !bit
+				}
+
+				g.canvas[y][xl].Set(Pixel(bit))
 			}
 
 			if upwards {
@@ -150,7 +172,7 @@ func (g *QRCode) Write(bytes []byte) (int, error) {
 }
 
 func (g *QRCode) bitsGenerator() func() bool {
-	var dataBits []bool
+	dataBits := make([]bool, 0, len(g.data)*8)
 	for _, b := range g.data {
 		bits := algorithms.ToBoolArray(b)
 		dataBits = append(dataBits, bits[:]...)
@@ -207,9 +229,9 @@ func (g *QRCode) placeVersion() {
 	var locX, locY int = 0, g.size - versionPadding
 	var x, y int
 
-	versionBinary := versionCodes[g.version]
+	versionBits := versionCodes[g.version]
 
-	for y_offset, b := range versionBinary {
+	for y_offset, b := range versionBits {
 		bits := algorithms.ToBoolArray(b)
 
 		for x_offset, bit := range bits[2:] {
@@ -223,8 +245,45 @@ func (g *QRCode) placeVersion() {
 }
 
 func (g *QRCode) placeMask() {
-	// maskPattern := 0
-	// code := maskCodes[g.correction][maskPattern]
+	code := maskCodes[g.correction][g.pattern]
+
+	codeBits := make([]bool, 0, 15)
+	msb := algorithms.ToBoolArray(byte(code >> 8))
+	lsb := algorithms.ToBoolArray(byte(code))
+
+	codeBits = append(codeBits, msb[1:]...)
+	codeBits = append(codeBits, lsb[:]...)
+
+	// Bottom left + Top right
+	i := 0
+	for x, y := 8, g.size-1; y > g.size-8; y = y - 1 {
+		g.canvas[y][x].Set(Pixel(!codeBits[i]))
+		i++
+	}
+
+	g.canvas[g.size-8][8].Set(false) // This module is always black
+
+	for x, y := g.size-8, 8; x < g.size; x = x + 1 {
+		g.canvas[y][x].Set(Pixel(!codeBits[i]))
+		i++
+	}
+
+	// Top left
+	i = 0
+	for x, y := 0, 8; x < 9; x++ {
+		if !g.canvas[y][x].isUsed {
+			g.canvas[y][x].Set(Pixel(!codeBits[i]))
+			i++
+		}
+	}
+
+	for x, y := 8, 7; y > -1; y-- {
+		if !g.canvas[y][x].isUsed {
+			g.canvas[y][x].Set(Pixel(!codeBits[i]))
+			i++
+		}
+	}
+
 }
 
 func (g *QRCode) isUnused(startX, startY, endX, endY int) bool {

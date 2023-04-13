@@ -11,7 +11,7 @@ func main() {
 	encoder := qr_encode.NewEncoder(qr_encode.L)
 
 	fmt.Println("Start...")
-	grid, err := encoder.Encode2D("Hello world! Abracadabra 1Hello world! Abracadabra 1Hello world! Abracadabra 1Hello world! Abracadabra 1Hello world! Abracadabra 1Hello world! Abracadabra 1")
+	grid, err := encoder.Encode2D("Hello world!")
 	if err != nil {
 		log.Fatalf("encoder: %v", err)
 	}
