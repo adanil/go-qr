@@ -48,6 +48,7 @@ type QRCode struct {
 }
 
 func NewQRCode(e *Encoder, data []byte) *QRCode {
+	e.version += 1               // FIXME: remove after versioning conflicts
 	canvasSize := versionOneSize // base canvas size for e.version == 1
 	alignments := alignmentPatterns[e.version]
 

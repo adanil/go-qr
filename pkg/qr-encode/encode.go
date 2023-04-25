@@ -68,7 +68,7 @@ func (e *Encoder) getVersion(byteLen int) (int, error) {
 			return -1, ErrTooLargeSize
 		}
 	}
-	return version + 1, nil
+	return version, nil
 }
 
 // nolint:gomnd
