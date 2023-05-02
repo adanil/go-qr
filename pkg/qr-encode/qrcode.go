@@ -9,7 +9,6 @@ import (
 
 // TODO: Get rid of magic numbers and make it constant
 const (
-	versionOneSize     = 21
 	versionSizePadding = 7
 	versionPadding     = 11
 	syncPadding        = 7
@@ -48,14 +47,9 @@ type QRCode struct {
 }
 
 func NewQRCode(e *Encoder, data []byte) *QRCode {
-	e.version += 1               // FIXME: remove after versioning conflicts
-	canvasSize := versionOneSize // base canvas size for e.version == 1
+	e.version += 1 // FIXME: remove after versioning conflicts
+	canvasSize := 4*e.version + 17
 	alignments := alignmentPatterns[e.version]
-
-	if e.version != 1 {
-		aLen := len(alignments)
-		canvasSize = alignments[aLen-1] + versionSizePadding
-	}
 
 	var canvas [][]Module = make([][]Module, canvasSize)
 	for i := range canvas {
@@ -84,6 +78,7 @@ func (g *QRCode) String() string {
 	var buf bytes.Buffer
 
 	buf.WriteByte('{')
+	fmt.Fprintf(&buf, "\nsize: %v", g.size)
 	fmt.Fprintf(&buf, "\nversion: %v", g.version)
 	fmt.Fprintf(&buf, "\nerror correction: %v", g.correction)
 	fmt.Fprintf(&buf, "\nmask pattern: %v", g.pattern)
@@ -92,7 +87,6 @@ func (g *QRCode) String() string {
 
 	for _, row := range g.canvas {
 		buf.WriteString("\n\t\t")
-		// fmt.Fprintf(&buf, "\n%d:\t", i)
 		for _, v := range row {
 			fmt.Fprintf(&buf, "%v", v.value)
 		}
@@ -118,6 +112,7 @@ func (g *QRCode) MakeLayout() {
 
 }
 
+// TODO: Fix writing issues for huge amount of data
 func (g *QRCode) Write(bytes []byte) (int, error) {
 	var n int
 	xl, xr := g.size-2, g.size-1

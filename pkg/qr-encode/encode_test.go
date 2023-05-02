@@ -2,8 +2,9 @@ package qr_encode
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_getVersion(t *testing.T) {
@@ -68,7 +69,7 @@ func Test_fillBuffer(t *testing.T) {
 	header := int(b[0] >> 4)
 	require.Equal(t, headerNibble, header)
 
-	actualLen := int(byte(int(b[0])&Nible) | ((b[1] >> 4) << 4))
+	actualLen := int(byte(int(b[0])&Nible) | (b[1] >> 4))
 	require.Equal(t, len(data), actualLen)
 
 	lastByte := b[10] | byte(int(b[9])&Nible)
@@ -117,6 +118,6 @@ func Test_mergeBlocks(t *testing.T) {
 	expected1 := []byte{0x01, 0x04, 0x02, 0x05, 0x03, 0x06, 0x07, 0x0A, 0x08, 0x0B, 0x09, 0x0C}
 
 	e := Encoder{}
-	result := e.mergeBlocks(blocks1, correctionBlocks1)
+	result, _ := e.mergeBlocks(blocks1, correctionBlocks1)
 	require.Equal(t, expected1, result)
 }
