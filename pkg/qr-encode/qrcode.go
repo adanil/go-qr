@@ -112,7 +112,6 @@ func (g *QRCode) MakeLayout() {
 
 }
 
-// TODO: Fix writing issues for huge amount of data
 func (g *QRCode) Write(bytes []byte) (int, error) {
 	var n int
 	xl, xr := g.size-2, g.size-1
@@ -140,7 +139,6 @@ func (g *QRCode) Write(bytes []byte) (int, error) {
 				}
 
 				g.canvas[y][xr].Set(Pixel(bit))
-
 			}
 
 			if !g.canvas[y][xl].isUsed {

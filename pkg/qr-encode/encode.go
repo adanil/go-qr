@@ -28,7 +28,7 @@ func (e *Encoder) Encode(text string) ([]byte, error) {
 	result, err := e.mergeBlocks(blocks, correctionBlocks)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("merge_blocks: %v", err)
 	}
 
 	return result, nil
@@ -77,16 +77,17 @@ func (e *Encoder) getVersion(byteLen int) (int, error) {
 
 // nolint:gomnd
 func (e *Encoder) fillBuffer(buff *bytes.Buffer, data []byte) {
-	dataLen := len(data)
 	var currByte byte
 
 	if e.version < 9 {
+		dataLen := uint8(len(data))
 		buff.WriteByte(byte((headerNibble << 4) | (dataLen >> 4 & Nible)))
 		currByte = byte(dataLen & Nible)
 	} else {
-		buff.WriteByte(byte((headerNibble << 4) | (dataLen >> 4 & Nible)))
-		buff.WriteByte(byte(dataLen & Byte))
-		currByte = byte((dataLen >> 12) & Nible)
+		dataLen := uint16(len(data))
+		buff.WriteByte(byte((headerNibble << 4) | (byte(dataLen>>12) & Nible)))
+		buff.WriteByte(byte(dataLen>>4) & Byte)
+		currByte = byte(dataLen) & Nible
 	}
 
 	for _, b := range data {
@@ -134,7 +135,7 @@ func (e *Encoder) generateCorrectionBlocks(dataBlocks [][]byte) [][]byte {
 	result := make([][]byte, 0, len(dataBlocks))
 	for _, block := range dataBlocks {
 		correctionBytesNum := algorithms.MaxInt(len(block), coefficientsNum)
-		correctionBytes := make([]byte, 0, correctionBytesNum)
+		correctionBytes := make([]byte, 0, correctionBytesNum+len(block))
 		correctionBytes = append(correctionBytes, block...)
 
 		for i := len(correctionBytes); i < correctionBytesNum; i++ {
