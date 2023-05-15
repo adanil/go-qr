@@ -28,7 +28,7 @@ func main() {
 	encoder := qr_encode.NewEncoder(corr)
 
 	fmt.Println("Start...")
-	grid, err := encoder.Encode2D("Hello world")
+	grid, err := encoder.Encode2D("https://github.com/psxzz/go-qr")
 	if err != nil {
 		log.Fatalf("encoder: %v", err)
 	}
