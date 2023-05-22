@@ -10,9 +10,9 @@ const (
 )
 
 const (
-	Nible        int = 0b1111
-	Byte         int = 0xFF
-	headerNibble int = 0b0100
+	Nible        byte = 0b1111
+	Byte         byte = 0xFF
+	headerNibble byte = 0b0100
 )
 
 var FillerBytes = [2]byte{0b11101100, 0b00010001}
