@@ -21,3 +21,13 @@ func ToBoolArray(in byte) [8]bool {
 	}
 	return out
 }
+
+func ToByte(in [8]bool) byte {
+	var out byte
+	for i, v := range in {
+		if v {
+			out |= 1 << (7 - i)
+		}
+	}
+	return out
+}

@@ -45,3 +45,23 @@ func TestToBoolArray(t *testing.T) {
 		}
 	}
 }
+
+func TestToByte(t *testing.T) {
+	for _, test := range []struct {
+		input [8]bool
+		want  byte
+	}{
+		{[8]bool{false, false, false, false, false, false, false, false}, 0x00},
+		{[8]bool{false, false, false, false, false, false, false, true}, 0x01},
+		{[8]bool{false, false, false, true, false, false, false, false}, 0x10},
+		{[8]bool{true, false, true, false, true, false, true, true}, 0xAB},
+		{[8]bool{false, true, false, false, false, true, false, false}, 0x44},
+		{[8]bool{false, false, false, false, true, true, true, true}, 0x0F},
+		{[8]bool{true, true, true, true, false, false, false, false}, 0xF0},
+		{[8]bool{true, true, true, true, true, true, true, true}, 0xFF},
+	} {
+		if got := ToByte(test.input); got != test.want {
+			t.Errorf("ToByte(%v) = %x", test.input, got)
+		}
+	}
+}
