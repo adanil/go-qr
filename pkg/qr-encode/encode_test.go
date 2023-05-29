@@ -69,10 +69,10 @@ func Test_fillBuffer(t *testing.T) {
 	header := b[0] >> 4
 	require.Equal(t, headerNibble, header)
 
-	actualLen := int(byte(b[0]&Nible) | byte(b[1]>>4))
+	actualLen := int(b[0]&Nible | b[1]>>4)
 	require.Equal(t, len(data), actualLen)
 
-	lastByte := b[10] | byte(b[9]&Nible)
+	lastByte := b[10] | b[9]&Nible
 	require.Equal(t, data[len(data)-1], lastByte)
 
 }

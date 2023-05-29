@@ -16,8 +16,3 @@ const (
 )
 
 var FillerBytes = [2]byte{0b11101100, 0b00010001}
-
-type Encoder struct {
-	level   CodeLevel
-	version int
-}

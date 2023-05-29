@@ -8,6 +8,11 @@ import (
 	"go.uber.org/multierr"
 )
 
+type Encoder struct {
+	level   CodeLevel
+	version int
+}
+
 func NewEncoder(level CodeLevel) *Encoder {
 	return &Encoder{level: level}
 }
@@ -28,7 +33,7 @@ func (e *Encoder) Encode(text string) ([]byte, error) {
 	result, err := e.mergeBlocks(blocks, correctionBlocks)
 
 	if err != nil {
-		return nil, fmt.Errorf("merge_blocks: %v", err)
+		return nil, fmt.Errorf("error merge blocks: %w", err)
 	}
 
 	return result, nil
@@ -81,19 +86,19 @@ func (e *Encoder) fillBuffer(buff *bytes.Buffer, data []byte) {
 
 	if e.version < 9 {
 		dataLen := uint8(len(data))
-		buff.WriteByte(byte((headerNibble << 4) | (dataLen >> 4 & Nible)))
-		currByte = byte(dataLen & Nible)
+		buff.WriteByte((headerNibble << 4) | ((dataLen >> 4) & Nible))
+		currByte = dataLen & Nible
 	} else {
 		dataLen := uint16(len(data))
-		buff.WriteByte(byte((headerNibble << 4) | (byte(dataLen>>12) & Nible)))
+		buff.WriteByte((headerNibble << 4) | (byte(dataLen>>12) & Nible)) //TODO check it
 		buff.WriteByte(byte(dataLen>>4) & Byte)
 		currByte = byte(dataLen) & Nible
 	}
 
 	for _, b := range data {
-		currByte = (currByte << 4) | (b >> 4 & byte(Nible))
+		currByte = (currByte << 4) | ((b >> 4) & Nible)
 		buff.WriteByte(currByte)
-		currByte = b & byte(Nible)
+		currByte = b & Nible
 	}
 	currByte <<= 4
 	buff.WriteByte(currByte)
@@ -188,8 +193,8 @@ func (e *Encoder) mergeBlocks(blocks [][]byte, correctionBlocks [][]byte) ([]byt
 	}
 
 	maxBlockSize = 0
-	for _, corr_block := range correctionBlocks {
-		maxBlockSize = algorithms.MaxInt(maxBlockSize, len(corr_block))
+	for _, corrBlock := range correctionBlocks {
+		maxBlockSize = algorithms.MaxInt(maxBlockSize, len(corrBlock))
 	}
 
 	currByteIdx = 0
