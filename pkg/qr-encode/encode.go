@@ -15,7 +15,11 @@ type Encoder struct {
 	version    int
 }
 
-func (e *Encoder) Encode(text string) ([]byte, error) {
+func (e *Encoder) Encode(text string) {
+	//TODO implement me
+}
+
+func (e *Encoder) dataEncode(text string) ([]byte, error) {
 	byteLen := len(text)
 	codeVersion, err := e.getVersion(byteLen)
 	if err != nil {
@@ -34,7 +38,7 @@ func (e *Encoder) Encode(text string) ([]byte, error) {
 }
 
 func (e *Encoder) Encode2D(text string) (*QRCode, error) {
-	data, err := e.Encode(text)
+	data, err := e.dataEncode(text)
 
 	if err != nil {
 		return nil, fmt.Errorf("encode1d: %v", err)
