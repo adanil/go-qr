@@ -9,12 +9,10 @@ import (
 )
 
 type Encoder struct {
-	level   CodeLevel
-	version int
-}
-
-func NewEncoder(level CodeLevel) *Encoder {
-	return &Encoder{level: level}
+	level      CodeLevel
+	minVersion int
+	maxVersion int
+	version    int
 }
 
 func (e *Encoder) Encode(text string) ([]byte, error) {
@@ -57,7 +55,7 @@ func (e *Encoder) Encode2D(text string) (*QRCode, error) {
 func (e *Encoder) getVersion(byteLen int) (int, error) {
 	bitLen := byteLen*8 + 4 // nolint:gomnd
 	versionsArray := versionSize[e.level]
-	version, err := algorithms.LowerBound(versionsArray[:], bitLen)
+	version, err := algorithms.LowerBound(versionsArray[e.minVersion:e.maxVersion], bitLen)
 	if err != nil {
 		return -1, err
 	}
