@@ -30,11 +30,7 @@ func (e *Encoder) Encode(text string) ([]byte, error) {
 
 	blocks := e.divideIntoBlocks(currBuff)
 	correctionBlocks := e.generateCorrectionBlocks(blocks)
-	result, err := e.mergeBlocks(blocks, correctionBlocks)
-
-	if err != nil {
-		return nil, fmt.Errorf("error merge blocks: %w", err)
-	}
+	result := e.mergeBlocks(blocks, correctionBlocks)
 
 	return result, nil
 }
@@ -90,8 +86,8 @@ func (e *Encoder) fillBuffer(buff *bytes.Buffer, data []byte) {
 		currByte = dataLen & Nible
 	} else {
 		dataLen := uint16(len(data))
-		buff.WriteByte((headerNibble << 4) | (byte(dataLen>>12) & Nible)) //TODO check it
-		buff.WriteByte(byte(dataLen>>4) & Byte)
+		buff.WriteByte((headerNibble << 4) | (byte(dataLen>>12) & Nible))
+		buff.WriteByte(byte(dataLen >> 4))
 		currByte = byte(dataLen) & Nible
 	}
 
@@ -169,11 +165,7 @@ func (e *Encoder) generateCorrectionBlocks(dataBlocks [][]byte) [][]byte {
 	return result
 }
 
-func (e *Encoder) mergeBlocks(blocks [][]byte, correctionBlocks [][]byte) ([]byte, error) {
-	if len(blocks) != len(correctionBlocks) {
-		return nil, fmt.Errorf("lengths are not equal")
-	}
-
+func (e *Encoder) mergeBlocks(blocks [][]byte, correctionBlocks [][]byte) []byte {
 	result := bytes.NewBuffer(make([]byte, 0))
 
 	maxBlockSize := 0
@@ -208,5 +200,5 @@ func (e *Encoder) mergeBlocks(blocks [][]byte, correctionBlocks [][]byte) ([]byt
 		currByteIdx++
 	}
 
-	return result.Bytes(), nil
+	return result.Bytes()
 }

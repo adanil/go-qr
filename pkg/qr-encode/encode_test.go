@@ -118,6 +118,6 @@ func Test_mergeBlocks(t *testing.T) {
 	expected1 := []byte{0x01, 0x04, 0x02, 0x05, 0x03, 0x06, 0x07, 0x0A, 0x08, 0x0B, 0x09, 0x0C}
 
 	e := Encoder{}
-	result, _ := e.mergeBlocks(blocks1, correctionBlocks1)
+	result := e.mergeBlocks(blocks1, correctionBlocks1)
 	require.Equal(t, expected1, result)
 }
