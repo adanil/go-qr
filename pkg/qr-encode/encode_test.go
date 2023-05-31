@@ -12,36 +12,55 @@ func Test_getVersion(t *testing.T) {
 		byteLen         int
 		level           CodeLevel
 		expectedVersion int
+		minVersion      int
+		maxVersion      int
 	}{
+		{
+			byteLen:         10,
+			level:           L,
+			expectedVersion: 0,
+			minVersion:      0,
+			maxVersion:      40,
+		},
 		{
 			byteLen:         100,
 			level:           L,
 			expectedVersion: 4,
+			minVersion:      4,
+			maxVersion:      5,
 		},
 		{
 			byteLen:         1250,
 			level:           M,
 			expectedVersion: 28,
+			minVersion:      20,
+			maxVersion:      40,
 		},
 		{
 			byteLen:         140,
 			level:           H,
 			expectedVersion: 11,
+			minVersion:      0,
+			maxVersion:      40,
 		},
 		{
 			byteLen:         242,
 			level:           Q,
 			expectedVersion: 13,
+			minVersion:      0,
+			maxVersion:      40,
 		},
 		{
 			byteLen:         241,
 			level:           Q,
 			expectedVersion: 12,
+			minVersion:      0,
+			maxVersion:      40,
 		},
 	}
 
 	for _, test := range testCases {
-		e := Encoder{level: test.level}
+		e := NewEncoder(test.level, WithVersionRange(test.minVersion, test.maxVersion))
 		actual, err := e.getVersion(test.byteLen)
 		require.NoError(t, err)
 		require.Equal(t, test.expectedVersion, actual)
@@ -57,7 +76,7 @@ func Test_getVersion(t *testing.T) {
 func Test_fillBuffer(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 0))
 	data := []byte{13, 14, 28, 42, 56, 88, 123, 233, 255}
-	e := Encoder{level: L}
+	e := NewEncoder(L)
 	version, _ := e.getVersion(len(data))
 	e.version = version
 

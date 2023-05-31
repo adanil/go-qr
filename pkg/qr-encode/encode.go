@@ -63,6 +63,7 @@ func (e *Encoder) getVersion(byteLen int) (int, error) {
 	if err != nil {
 		return -1, err
 	}
+	version += e.minVersion
 	maxVersionSize := versionSize[e.level][version]
 	if version < 9 { // nolint:gomnd
 		bitLen += 8
