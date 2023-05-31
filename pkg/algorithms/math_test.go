@@ -2,7 +2,7 @@ package algorithms
 
 import "testing"
 
-func TestFloor(t *testing.T) {
+func Test_Floor(t *testing.T) {
 	var f32tests = []struct {
 		input float32
 		want  float32
@@ -41,7 +41,7 @@ func TestFloor(t *testing.T) {
 
 }
 
-func TestAbs(t *testing.T) {
+func Test_Abs(t *testing.T) {
 	var integerTests = []struct {
 		input int
 		want  int

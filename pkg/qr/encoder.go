@@ -8,8 +8,10 @@ import (
 	"go.uber.org/multierr"
 )
 
+// Correction is the level of QR code correction: L, M, Q, H
 type Correction int
 
+// Encoder encodes input data into a QR code
 type Encoder struct {
 	level                  Correction
 	minVersion, maxVersion int
@@ -17,6 +19,7 @@ type Encoder struct {
 	version                int
 }
 
+// Encode encodes the given text into a QR code
 func (e *Encoder) Encode(text string) (*Code, error) {
 	data, err := e.dataEncode(text)
 
@@ -136,7 +139,7 @@ func (e *Encoder) generateCorrectionBlocks(dataBlocks [][]byte) [][]byte {
 
 	result := make([][]byte, 0, len(dataBlocks))
 	for _, block := range dataBlocks {
-		correctionBytesNum := algorithms.MaxInt(len(block), coefficientsNum)
+		correctionBytesNum := algorithms.Max(len(block), coefficientsNum)
 		correctionBytes := make([]byte, 0, correctionBytesNum+len(block))
 		correctionBytes = append(correctionBytes, block...)
 
@@ -171,7 +174,7 @@ func (e *Encoder) mergeBlocks(blocks [][]byte, correctionBlocks [][]byte) []byte
 
 	maxBlockSize := 0
 	for _, block := range blocks {
-		maxBlockSize = algorithms.MaxInt(maxBlockSize, len(block))
+		maxBlockSize = algorithms.Max(maxBlockSize, len(block))
 	}
 
 	currByteIdx := 0
@@ -187,7 +190,7 @@ func (e *Encoder) mergeBlocks(blocks [][]byte, correctionBlocks [][]byte) []byte
 
 	maxBlockSize = 0
 	for _, corrBlock := range correctionBlocks {
-		maxBlockSize = algorithms.MaxInt(maxBlockSize, len(corrBlock))
+		maxBlockSize = algorithms.Max(maxBlockSize, len(corrBlock))
 	}
 
 	currByteIdx = 0
