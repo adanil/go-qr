@@ -1,4 +1,4 @@
-package qr_encode
+package qr
 
 type EncoderOptions func(*Encoder)
 

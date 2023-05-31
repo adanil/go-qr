@@ -1,4 +1,4 @@
-package qr_encode
+package qr
 
 import (
 	"github.com/psxzz/go-qr/pkg/algorithms"
@@ -20,15 +20,15 @@ func penalty1(canvas [][]Module) int {
 
 		for _, m := range row[1:] {
 			if m.value != prev {
-				prev = m.value
-				count = 1
-			} else {
-				count++
-				if count == 5 {
-					score += baseScorePenalty2
-				} else if count > 5 {
-					score++
-				}
+				prev, count = m.value, 1
+				continue
+			}
+
+			count++
+			if count == 5 {
+				score += baseScorePenalty2
+			} else if count > 5 {
+				score++
 			}
 		}
 	}
@@ -40,15 +40,15 @@ func penalty1(canvas [][]Module) int {
 
 		for j := 1; j < len(canvas); j++ {
 			if canvas[j][i].value != prev {
-				prev = canvas[j][i].value
-				count = 1
-			} else {
-				count++
-				if count == 5 {
-					score += baseScorePenalty1
-				} else if count > 5 {
-					score++
-				}
+				prev, count = canvas[j][i].value, 1
+				continue
+			}
+
+			count++
+			if count == 5 {
+				score += baseScorePenalty1
+			} else if count > 5 {
+				score++
 			}
 		}
 	}

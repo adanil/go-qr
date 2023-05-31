@@ -1,4 +1,4 @@
-package qr_encode
+package qr
 
 const (
 	wh = false

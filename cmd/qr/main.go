@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	qr "github.com/psxzz/go-qr/pkg/qr-encode"
+	"github.com/psxzz/go-qr/pkg/qr"
 )
 
 var corrFlag = flag.String("corr", "L", "Correction level")

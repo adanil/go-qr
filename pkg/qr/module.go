@@ -1,4 +1,4 @@
-package qr_encode
+package qr
 
 type Module struct {
 	value bool

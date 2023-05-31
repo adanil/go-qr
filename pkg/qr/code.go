@@ -1,4 +1,4 @@
-package qr_encode
+package qr
 
 import (
 	"bytes"
@@ -67,7 +67,7 @@ func (c *Code) String() string {
 	return buf.String()
 }
 
-func (c *Code) encode(data []byte) error {
+func (c *Code) encode(data []byte) {
 	c.placeSearchPatterns()
 	c.placeAlignments()
 	c.placeSync()
@@ -77,15 +77,11 @@ func (c *Code) encode(data []byte) error {
 	}
 
 	c.placeMask()
-
-	c.write(data)
-
+	c.writeData(data)
 	c.countPenalty()
-
-	return nil
 }
 
-func (c *Code) write(bytes []byte) {
+func (c *Code) writeData(bytes []byte) {
 	mask := c.maskF
 	nextBit := c.bitsGenerator(bytes) // convert encoded data to bit flow
 

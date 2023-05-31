@@ -1,7 +1,5 @@
 // nolint:dupl
-package qr_encode
-
-type Correction int
+package qr
 
 const (
 	L Correction = iota

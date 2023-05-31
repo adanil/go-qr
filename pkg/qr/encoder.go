@@ -1,4 +1,4 @@
-package qr_encode
+package qr
 
 import (
 	"bytes"
@@ -7,6 +7,8 @@ import (
 	"github.com/psxzz/go-qr/pkg/algorithms"
 	"go.uber.org/multierr"
 )
+
+type Correction int
 
 type Encoder struct {
 	level                  Correction
@@ -19,10 +21,10 @@ func (e *Encoder) Encode(text string) (*Code, error) {
 	data, err := e.dataEncode(text)
 
 	if err != nil {
-		return nil, fmt.Errorf("data_encoder: %v", err)
+		return nil, fmt.Errorf("runtime error in data_encoder: %w", err)
 	}
 
-	var currentCode *Code = nil
+	var currentCode *Code
 	for mask := e.minMask; mask < e.maxMask; mask++ {
 		code := newCode(data, e.level, e.version, mask)
 
