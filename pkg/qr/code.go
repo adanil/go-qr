@@ -3,6 +3,9 @@ package qr
 import (
 	"bytes"
 	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
 
 	"github.com/psxzz/go-qr/pkg/algorithms"
 )
@@ -65,6 +68,36 @@ func (c *Code) String() string {
 	buf.WriteString("\n}")
 
 	return buf.String()
+}
+
+// GetImageWithColors generates an image representation of the QR code with specified colors
+func (c *Code) GetImageWithColors(pixelSize int, colorOne, colorTwo color.RGBA) image.Image {
+	canvasHeight, canvasWidth := len(c.canvas), len(c.canvas[0])
+	imageHeight, imageWidth := canvasHeight*pixelSize, canvasWidth*pixelSize
+
+	upLeft, lowRight := image.Point{X: 0, Y: 0}, image.Point{X: imageWidth, Y: imageHeight}
+
+	img := image.NewRGBA(image.Rectangle{Min: upLeft, Max: lowRight})
+
+	r := image.Rect(0, 0, imageWidth, imageHeight)
+	draw.Draw(img, r, image.NewUniform(colorOne), image.Point{}, draw.Src)
+
+	for y := 0; y < canvasHeight; y++ {
+		for x := 0; x < canvasWidth; x++ {
+			if !c.canvas[y][x].value {
+				continue
+			}
+			rect := image.Rect(x*pixelSize, y*pixelSize, (x+1)*pixelSize, (y+1)*pixelSize)
+			draw.Draw(img, rect, image.NewUniform(colorTwo), image.Point{}, draw.Src)
+		}
+	}
+
+	return img
+}
+
+// GetImage generates an image representation of the QR code using default colors (black and white)
+func (c *Code) GetImage(pixelSize int) image.Image {
+	return c.GetImageWithColors(pixelSize, color.RGBA{R: 255, G: 255, B: 255, A: 0xff}, color.RGBA{A: 0xff}) //nolint:gomnd
 }
 
 func (c *Code) encode(data []byte) {
