@@ -16,6 +16,9 @@ build: bindir
 test:
 	go test ./...
 
+test_coverage:
+	go test ./... -coverprofile=coverage.out
+
 install-lint: bindir
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s $(GOLANGCI_LATEST_VERSION)
 
@@ -26,5 +29,9 @@ deps:
 	go mod tidy
 	go mod vendor
 	go mod verify
+
+clean:
+	go clean
+	rm -rf ${BINDIR}
 
 all: deps build test lint
