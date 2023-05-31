@@ -1,19 +1,19 @@
 package qr_encode
 
 const (
-	bl = false
-	wh = true
+	wh = false
+	bl = true
 )
 
 type Pattern struct {
-	data  [][]Pixel
+	data  [][]bool
 	xSize int
 	ySize int
 }
 
 var (
 	searchPatternTL = Pattern{
-		data: [][]Pixel{
+		data: [][]bool{
 			{bl, bl, bl, bl, bl, bl, bl, wh},
 			{bl, wh, wh, wh, wh, wh, bl, wh},
 			{bl, wh, bl, bl, bl, wh, bl, wh},
@@ -28,7 +28,7 @@ var (
 	}
 
 	searchPatternTR = Pattern{
-		data: [][]Pixel{
+		data: [][]bool{
 			{wh, bl, bl, bl, bl, bl, bl, bl},
 			{wh, bl, wh, wh, wh, wh, wh, bl},
 			{wh, bl, wh, bl, bl, bl, wh, bl},
@@ -43,7 +43,7 @@ var (
 	}
 
 	searchPatternBL = Pattern{
-		data: [][]Pixel{
+		data: [][]bool{
 			{wh, wh, wh, wh, wh, wh, wh, wh},
 			{bl, bl, bl, bl, bl, bl, bl, wh},
 			{bl, wh, wh, wh, wh, wh, bl, wh},
@@ -58,7 +58,7 @@ var (
 	}
 
 	alignPattern = Pattern{
-		data: [][]Pixel{
+		data: [][]bool{
 			{bl, bl, bl, bl, bl},
 			{bl, wh, wh, wh, bl},
 			{bl, wh, bl, wh, bl},

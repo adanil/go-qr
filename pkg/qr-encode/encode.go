@@ -9,14 +9,29 @@ import (
 )
 
 type Encoder struct {
-	level      CodeLevel
-	minVersion int
-	maxVersion int
-	version    int
+	level                  Correction
+	minVersion, maxVersion int
+	minMask, maxMask       int
+	version                int
 }
 
-func (e *Encoder) Encode(text string) {
-	//TODO implement me
+func (e *Encoder) Encode(text string) (*Code, error) {
+	data, err := e.dataEncode(text)
+
+	if err != nil {
+		return nil, fmt.Errorf("data_encoder: %v", err)
+	}
+
+	var currentCode *Code = nil
+	for mask := e.minMask; mask < e.maxMask; mask++ {
+		code := newCode(data, e.level, e.version, mask)
+
+		if currentCode == nil || code.penaltyScore < currentCode.penaltyScore {
+			currentCode = code
+		}
+	}
+
+	return currentCode, nil
 }
 
 func (e *Encoder) dataEncode(text string) ([]byte, error) {
@@ -35,25 +50,6 @@ func (e *Encoder) dataEncode(text string) ([]byte, error) {
 	result := e.mergeBlocks(blocks, correctionBlocks)
 
 	return result, nil
-}
-
-func (e *Encoder) Encode2D(text string) (*QRCode, error) {
-	data, err := e.dataEncode(text)
-
-	if err != nil {
-		return nil, fmt.Errorf("encode1d: %v", err)
-	}
-
-	grid := NewQRCode(e, data)
-	grid.MakeLayout()
-
-	_, err = grid.Write(data)
-
-	if err != nil {
-		return nil, fmt.Errorf("write: %v", err)
-	}
-
-	return grid, nil
 }
 
 func (e *Encoder) getVersion(byteLen int) (int, error) {

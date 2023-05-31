@@ -5,34 +5,37 @@ import (
 	"fmt"
 	"log"
 
-	qr_encode "github.com/psxzz/go-qr/pkg/qr-encode"
+	qr "github.com/psxzz/go-qr/pkg/qr-encode"
 )
 
 var corrFlag = flag.String("corr", "L", "Correction level")
-var corr qr_encode.CodeLevel
+var corr qr.Correction
 
 func main() {
 	flag.Parse()
 
 	switch *corrFlag {
 	case "L":
-		corr = qr_encode.L
+		corr = qr.L
 	case "M":
-		corr = qr_encode.M
+		corr = qr.M
 	case "Q":
-		corr = qr_encode.Q
+		corr = qr.Q
 	case "H":
-		corr = qr_encode.H
+		corr = qr.H
 	}
 
-	encoder := qr_encode.NewEncoder(corr, qr_encode.WithVersionRange(0, 40))
+	encoder := qr.NewEncoder(
+		qr.WithCorrectionLevel(corr),
+		qr.WithVersionRange(0, 40),
+	)
 
-	fmt.Println("Start...")
-	grid, err := encoder.Encode2D("https://github.com/psxzz/go-qr")
+	code, err := encoder.Encode("https://github.com/psxzz/go-qr")
+
 	if err != nil {
 		log.Fatalf("encoder: %v", err)
 	}
 
-	fmt.Printf("grid: %v\n", grid)
+	fmt.Printf("code: %v\n", code)
 
 }

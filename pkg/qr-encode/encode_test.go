@@ -10,7 +10,7 @@ import (
 func Test_getVersion(t *testing.T) {
 	testCases := []struct {
 		byteLen         int
-		level           CodeLevel
+		level           Correction
 		expectedVersion int
 		minVersion      int
 		maxVersion      int
@@ -60,7 +60,7 @@ func Test_getVersion(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		e := NewEncoder(test.level, WithVersionRange(test.minVersion, test.maxVersion))
+		e := NewEncoder(WithCorrectionLevel(test.level), WithVersionRange(test.minVersion, test.maxVersion))
 		actual, err := e.getVersion(test.byteLen)
 		require.NoError(t, err)
 		require.Equal(t, test.expectedVersion, actual)
@@ -76,7 +76,7 @@ func Test_getVersion(t *testing.T) {
 func Test_fillBuffer(t *testing.T) {
 	buff := bytes.NewBuffer(make([]byte, 0))
 	data := []byte{13, 14, 28, 42, 56, 88, 123, 233, 255}
-	e := NewEncoder(L)
+	e := NewEncoder(WithCorrectionLevel(L))
 	version, _ := e.getVersion(len(data))
 	e.version = version
 
