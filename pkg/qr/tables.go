@@ -15,7 +15,8 @@ const (
 )
 
 var (
-	FillerBytes = [2]byte{0b11101100, 0b00010001}
+	fillerBytes = [2]byte{0b11101100, 0b00010001}
+	syncPixels  = [2]bool{bl, wh}
 
 	versionSize = map[Correction][40]int{
 		L: {152, 272, 440, 640, 864, 1088, 1248, 1552, 1856, 2192,

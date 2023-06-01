@@ -8,6 +8,12 @@ import (
 	"go.uber.org/multierr"
 )
 
+const (
+	versionCodeNotRequired = 5
+	syncLinePosition       = 6
+	versionCodeOffset      = 11
+)
+
 // Correction is the level of QR code correction: L, M, Q, H
 type Correction int
 
@@ -27,16 +33,7 @@ func (e *Encoder) Encode(text string) (*Code, error) {
 		return nil, fmt.Errorf("runtime error in data_encoder: %w", err)
 	}
 
-	var currentCode *Code
-	for mask := e.minMask; mask < e.maxMask; mask++ {
-		code := newCode(data, e.level, e.version, mask)
-
-		if currentCode == nil || code.penaltyScore < currentCode.penaltyScore {
-			currentCode = code
-		}
-	}
-
-	return currentCode, nil
+	return e.generateCode(data), nil
 }
 
 func (e *Encoder) dataEncode(text string) ([]byte, error) {
@@ -55,6 +52,32 @@ func (e *Encoder) dataEncode(text string) ([]byte, error) {
 	result := e.mergeBlocks(blocks, correctionBlocks)
 
 	return result, nil
+}
+
+func (e *Encoder) generateCode(data []byte) *Code {
+	var currentCode *Code
+
+	for mask := e.minMask; mask < e.maxMask; mask++ {
+		code := newCode(data, e.level, e.version, mask)
+
+		e.placeSearchPatterns(code)
+		e.placeAlignments(code)
+		e.placeSync(code)
+
+		if e.version > versionCodeNotRequired {
+			e.placeVersion(code)
+		}
+
+		e.placeMask(code)
+		e.placeData(code, data)
+		e.countPenalty(code)
+
+		if currentCode == nil || code.penaltyScore < currentCode.penaltyScore {
+			currentCode = code
+		}
+	}
+
+	return currentCode
 }
 
 func (e *Encoder) getVersion(byteLen int) (int, error) {
@@ -104,11 +127,11 @@ func (e *Encoder) fillBuffer(buff *bytes.Buffer, data []byte) {
 	buff.WriteByte(currByte)
 
 	idx := 0
-	currByte = FillerBytes[idx]
+	currByte = fillerBytes[idx]
 	for buff.Len()*8 < versionSize[e.level][e.version] {
 		buff.WriteByte(currByte)
 		idx = (idx + 1) % 2
-		currByte = FillerBytes[idx]
+		currByte = fillerBytes[idx]
 	}
 }
 
@@ -205,4 +228,209 @@ func (e *Encoder) mergeBlocks(blocks [][]byte, correctionBlocks [][]byte) []byte
 	}
 
 	return result.Bytes()
+}
+
+func (e *Encoder) placeSearchPatterns(code *Code) {
+	e.placePattern(code, 0, 0, &searchPatternTL)                               // Top left corner
+	e.placePattern(code, 0, code.size-searchPatternTR.xSize, &searchPatternTR) // Top right
+	e.placePattern(code, code.size-searchPatternBL.ySize, 0, &searchPatternBL) // Bottom left
+}
+
+func (e *Encoder) placeAlignments(code *Code) {
+	perms := algorithms.GeneratePermutations(code.alignments)
+	offset := alignmentPatternSize / 2 // nolint:gomnd
+
+	for _, loc := range perms {
+		x, y := loc[0]-offset, loc[1]-offset
+		e.placePattern(code, x, y, &alignmentPattern)
+	}
+}
+
+func (e *Encoder) placeSync(code *Code) {
+	lenSyncPixels := len(syncPixels)
+	syncEnd := code.size - 7 // nolint:gomnd
+
+	var i, locX, locY int
+	// Vertical sync border
+	for i, locX, locY = 0, 6, 8; locY < syncEnd; locY++ {
+		if !code.canvas[locY][locX].isSet {
+			code.canvas[locY][locX].Set(syncPixels[i])
+		}
+		i = (i + 1) % lenSyncPixels
+	}
+
+	// Horizontal sync border
+	for i, locX, locY = 0, 8, 6; locX < syncEnd; locX++ {
+		if !code.canvas[locY][locX].isSet {
+			code.canvas[locY][locX].Set(syncPixels[i])
+		}
+		i = (i + 1) % lenSyncPixels
+	}
+}
+
+func (e *Encoder) placeVersion(code *Code) {
+	startX, startY := 0, code.size-versionCodeOffset
+
+	versionBits := versionCodes[code.version]
+	for y_offset, b := range versionBits {
+		bits := algorithms.ToBoolArray(b)
+
+		for x_offset, bit := range bits[2:] {
+			x, y := startX+x_offset, startY+y_offset
+
+			code.canvas[y][x].Set(bit) // Bottom left code
+			code.canvas[x][y].Set(bit) // Top right code
+		}
+	}
+
+}
+
+// nolint:gomnd
+func (e *Encoder) placeMask(code *Code) {
+	maskCode := maskCodes[code.correction][code.mask]
+
+	codeBits := make([]bool, 0, 15)
+	msb := algorithms.ToBoolArray(byte(maskCode >> 8))
+	lsb := algorithms.ToBoolArray(byte(maskCode))
+
+	codeBits = append(codeBits, msb[1:]...)
+	codeBits = append(codeBits, lsb[:]...)
+
+	// Bottom left + Top right
+	i := 0
+	for x, y := 8, code.size-1; y > code.size-8; y-- {
+		code.canvas[y][x].Set(codeBits[i])
+		i++
+	}
+
+	code.canvas[code.size-8][8].Set(false) // This module is always black
+
+	for x, y := code.size-8, 8; x < code.size; x++ {
+		code.canvas[y][x].Set(codeBits[i])
+		i++
+	}
+
+	// Top left
+	i = 0
+	for x, y := 0, 8; x < 9; x++ {
+		if !code.canvas[y][x].isSet {
+			code.canvas[y][x].Set(codeBits[i])
+			i++
+		}
+	}
+
+	for x, y := 8, 7; y > -1; y-- {
+		if !code.canvas[y][x].isSet {
+			code.canvas[y][x].Set(codeBits[i])
+			i++
+		}
+	}
+
+}
+
+func (e *Encoder) placeData(code *Code, bytes []byte) {
+	mask := code.maskF
+	nextBit := e.bitFlow(bytes) // convert encoded data to bit flow
+
+	xl, xr := code.size-2, code.size-1 // nolint:gomnd
+	upwards := true
+	for xl >= 0 {
+		if xr == syncLinePosition { // skip vertical synchronization line
+			xl, xr = xl-1, xr-1
+		}
+
+		y, border := code.size-1, -1
+		if !upwards {
+			y, border = 0, code.size
+		}
+
+		for y != border {
+			if !code.canvas[y][xr].isSet {
+				bit := nextBit()
+
+				if mask(xr, y) == 0 {
+					bit = !bit
+				}
+
+				code.canvas[y][xr].Set(bit)
+			}
+
+			if !code.canvas[y][xl].isSet {
+				bit := nextBit()
+
+				if mask(xl, y) == 0 {
+					bit = !bit
+				}
+
+				code.canvas[y][xl].Set(bit)
+			}
+
+			if upwards {
+				y--
+			} else {
+				y++
+			}
+		}
+
+		xl, xr = xl-2, xr-2 // nolint:gomnd
+		upwards = !upwards
+	}
+}
+
+func (e *Encoder) countPenalty(code *Code) int {
+	// TODO implement
+	return 0
+}
+
+func (e *Encoder) placePattern(c *Code, startX, startY int, p *Pattern) {
+	pxLen, pyLen := p.xSize, p.ySize
+
+	if !e.isUnused(c, startX, startY, startX+pxLen, startY+pyLen) {
+		return
+	}
+
+	for i, pi := startX, 0; i < c.size && pi < pxLen; i, pi = i+1, pi+1 {
+		for j, pj := startY, 0; j < c.size && pj < pyLen; j, pj = j+1, pj+1 {
+			c.canvas[i][j].Set(p.data[pi][pj])
+		}
+	}
+}
+
+func (e *Encoder) isUnused(c *Code, startX, startY, endX, endY int) bool {
+
+	// false, if arguments are out of canvas bounds
+	if startX < 0 || startX >= c.size ||
+		startY < 0 || startY >= c.size ||
+		endX > c.size || endY > c.size {
+		return false
+	}
+
+	for i := startX; i < endX; i++ {
+		for j := startY; j < endY; j++ {
+			if c.canvas[i][j].isSet {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+func (e *Encoder) bitFlow(data []byte) func() bool {
+	dataBits := make([]bool, 0, len(data)*8) // nolint:gomnd
+	for _, b := range data {
+		bits := algorithms.ToBoolArray(b)
+		dataBits = append(dataBits, bits[:]...)
+	}
+
+	i := 0
+	return func() bool {
+		if i >= len(dataBits) {
+			return false
+		}
+
+		bit := dataBits[i]
+		i++
+		return bit
+	}
 }
