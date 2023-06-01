@@ -22,6 +22,7 @@ func ToBoolArray(in byte) [8]bool {
 	return out
 }
 
+// nolint:gomnd
 func ToByte(in [8]bool) byte {
 	var out byte
 	for i, v := range in {

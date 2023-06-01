@@ -10,6 +10,11 @@ import (
 	"github.com/psxzz/go-qr/pkg/algorithms"
 )
 
+const (
+	versionCodeNotRequired = 5
+	syncLinePosition       = 6
+)
+
 type Code struct {
 	version      int
 	correction   Correction
@@ -24,7 +29,7 @@ type Code struct {
 }
 
 func newCode(data []byte, correction Correction, version int, mask int) *Code {
-	canvasSize := 4*(version+1) + 17
+	canvasSize := 4*(version+1) + 17 // nolint:gomnd
 
 	var canvas [][]Module = make([][]Module, canvasSize)
 	for i := range canvas {
@@ -105,7 +110,7 @@ func (c *Code) encode(data []byte) {
 	c.placeAlignments()
 	c.placeSync()
 
-	if c.version > 5 {
+	if c.version > versionCodeNotRequired {
 		c.placeVersion()
 	}
 
@@ -118,10 +123,10 @@ func (c *Code) writeData(bytes []byte) {
 	mask := c.maskF
 	nextBit := c.bitsGenerator(bytes) // convert encoded data to bit flow
 
-	xl, xr := c.size-2, c.size-1
+	xl, xr := c.size-2, c.size-1 // nolint:gomnd
 	upwards := true
 	for xl >= 0 {
-		if xr == 6 { // skip vertical synchronization line
+		if xr == syncLinePosition { // skip vertical synchronization line
 			xl, xr = xl-1, xr-1
 		}
 
@@ -158,13 +163,13 @@ func (c *Code) writeData(bytes []byte) {
 			}
 		}
 
-		xl, xr = xl-2, xr-2
+		xl, xr = xl-2, xr-2 // nolint:gomnd
 		upwards = !upwards
 	}
 }
 
 func (c *Code) bitsGenerator(data []byte) func() bool {
-	dataBits := make([]bool, 0, len(data)*8)
+	dataBits := make([]bool, 0, len(data)*8) // nolint:gomnd
 	for _, b := range data {
 		bits := algorithms.ToBoolArray(b)
 		dataBits = append(dataBits, bits[:]...)
@@ -195,30 +200,34 @@ func (c *Code) placeSearchPatterns() {
 
 func (c *Code) placeAlignments() {
 	perms := algorithms.GeneratePermutations(c.alignments)
+	offset := alignmentPatternSize / 2 // nolint:gomnd
 
 	for _, loc := range perms {
-		x, y := loc[0]-(alignPattern.xSize/2), loc[1]-(alignPattern.ySize/2)
-		c.placePattern(x, y, &alignPattern)
+		x, y := loc[0]-offset, loc[1]-offset
+		c.placePattern(x, y, &alignmentPattern)
 	}
 }
 
 func (c *Code) placeSync() {
 	syncPixels := [2]bool{bl, wh}
-	syncEnd := c.size - 7
+	lenSyncPixels := len(syncPixels)
+	syncEnd := c.size - 7 // nolint:gomnd
 
 	var i, locX, locY int
 	// Vertical sync border
-	for i, locX, locY = 0, 6, 8; locY < syncEnd; i, locY = (i+1)%2, locY+1 {
+	for i, locX, locY = 0, 6, 8; locY < syncEnd; locY++ {
 		if !c.canvas[locY][locX].isSet {
 			c.canvas[locY][locX].Set(syncPixels[i])
 		}
+		i = (i + 1) % lenSyncPixels
 	}
 
 	// Horizontal sync border
-	for i, locX, locY = 0, 8, 6; locX < syncEnd; i, locX = (i+1)%2, locX+1 {
+	for i, locX, locY = 0, 8, 6; locX < syncEnd; locX++ {
 		if !c.canvas[locY][locX].isSet {
 			c.canvas[locY][locX].Set(syncPixels[i])
 		}
+		i = (i + 1) % lenSyncPixels
 	}
 }
 
@@ -240,6 +249,7 @@ func (c *Code) placeVersion() {
 
 }
 
+// nolint:gomnd
 func (c *Code) placeMask() {
 	maskCode := maskCodes[c.correction][c.mask]
 
@@ -252,14 +262,14 @@ func (c *Code) placeMask() {
 
 	// Bottom left + Top right
 	i := 0
-	for x, y := 8, c.size-1; y > c.size-8; y = y - 1 {
+	for x, y := 8, c.size-1; y > c.size-8; y-- {
 		c.canvas[y][x].Set(codeBits[i])
 		i++
 	}
 
 	c.canvas[c.size-8][8].Set(false) // This module is always black
 
-	for x, y := c.size-8, 8; x < c.size; x = x + 1 {
+	for x, y := c.size-8, 8; x < c.size; x++ {
 		c.canvas[y][x].Set(codeBits[i])
 		i++
 	}

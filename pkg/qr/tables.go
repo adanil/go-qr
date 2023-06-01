@@ -119,7 +119,6 @@ var (
 		79, 174, 213, 233, 230, 231, 173, 232, 116, 214, 244, 234, 168, 80, 88, 175,
 	}
 
-	// codeVersion -> alignment pattern locations
 	alignmentPatterns = [40][]int{
 		{}, {18}, {22}, {26}, {30}, {34},
 		{6, 22, 38}, {6, 24, 42},
@@ -141,7 +140,6 @@ var (
 		{6, 26, 54, 82, 110, 138, 166}, {6, 30, 58, 86, 114, 142, 170},
 	}
 
-	// codeVersion -> binary representation on QR code
 	versionCodes = map[int][]byte{
 		6:  {0b000010, 0b011110, 0b100110},
 		7:  {0b010001, 0b011100, 0b111000},
@@ -179,7 +177,6 @@ var (
 		39: {0b111001, 0b000100, 0b010101},
 	}
 
-	// correction level -> code[maskCode]
 	maskCodes = map[Correction][8]uint16{
 		L: {
 			0b111011111000100, 0b111001011110011, 0b111110110101010, 0b111100010011101,
@@ -199,7 +196,7 @@ var (
 		},
 	}
 
-	// mask version -> mask function
+	// nolint:gomnd
 	maskFunctions = [8]func(int, int) int{
 		func(x, y int) int { return (x + y) % 2 },
 		func(x, y int) int { return y % 2 },

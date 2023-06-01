@@ -11,6 +11,11 @@ type Pattern struct {
 	ySize int
 }
 
+const (
+	searchPatternSize    = 8
+	alignmentPatternSize = 5
+)
+
 var (
 	searchPatternTL = Pattern{
 		data: [][]bool{
@@ -23,8 +28,8 @@ var (
 			{bl, bl, bl, bl, bl, bl, bl, wh},
 			{wh, wh, wh, wh, wh, wh, wh, wh},
 		},
-		xSize: 8,
-		ySize: 8,
+		xSize: searchPatternSize,
+		ySize: searchPatternSize,
 	}
 
 	searchPatternTR = Pattern{
@@ -38,8 +43,8 @@ var (
 			{wh, bl, bl, bl, bl, bl, bl, bl},
 			{wh, wh, wh, wh, wh, wh, wh, wh},
 		},
-		xSize: 8,
-		ySize: 8,
+		xSize: searchPatternSize,
+		ySize: searchPatternSize,
 	}
 
 	searchPatternBL = Pattern{
@@ -53,11 +58,11 @@ var (
 			{bl, wh, wh, wh, wh, wh, bl, wh},
 			{bl, bl, bl, bl, bl, bl, bl, wh},
 		},
-		xSize: 8,
-		ySize: 8,
+		xSize: searchPatternSize,
+		ySize: searchPatternSize,
 	}
 
-	alignPattern = Pattern{
+	alignmentPattern = Pattern{
 		data: [][]bool{
 			{bl, bl, bl, bl, bl},
 			{bl, wh, wh, wh, bl},
@@ -65,7 +70,7 @@ var (
 			{bl, wh, wh, wh, bl},
 			{bl, bl, bl, bl, bl},
 		},
-		xSize: 5,
-		ySize: 5,
+		xSize: alignmentPatternSize,
+		ySize: alignmentPatternSize,
 	}
 )

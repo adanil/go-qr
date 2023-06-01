@@ -1,5 +1,11 @@
 package qr
 
+const (
+	defaultLevel                   Correction = M
+	defaultMinVer, defaultMaxVer   int        = 0, 40
+	defaultMinMask, defaultMaxMask int        = 0, 8
+)
+
 type EncoderOptions func(*Encoder)
 
 func WithCorrectionLevel(level Correction) EncoderOptions {
@@ -24,9 +30,11 @@ func WithMaskRange(minMask, maxMask int) EncoderOptions {
 
 func NewEncoder(options ...EncoderOptions) *Encoder {
 	encoder := &Encoder{
-		level:      M,
-		minVersion: 0, maxVersion: 40,
-		minMask: 0, maxMask: 8,
+		level:      defaultLevel,
+		minVersion: defaultMinVer,
+		maxVersion: defaultMaxVer,
+		minMask:    defaultMinMask,
+		maxMask:    defaultMaxMask,
 	}
 
 	for _, option := range options {

@@ -10,6 +10,7 @@ const (
 	baseScorePenalty3 = 40
 )
 
+// nolint:gomnd
 func penalty1(canvas [][]Module) int {
 	var score int
 
@@ -86,6 +87,7 @@ func penalty2(canvas [][]Module) int {
 // 	return patternsCount
 // }
 
+// nolint:gomnd
 func penalty4(canvas [][]Module) int {
 	var score int
 	total := len(canvas) * len(canvas)
