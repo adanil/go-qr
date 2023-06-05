@@ -67,9 +67,10 @@ func (c *Code) String() string {
 }
 
 // GetImageWithColors generates an image representation of the QR code with specified colors
-func (c *Code) GetImageWithColors(pixelSize int, colorOne, colorTwo color.RGBA) image.Image {
+func (c *Code) GetImageWithColors(pixelSize, borderSize int, colorOne, colorTwo color.RGBA) image.Image {
+	borderSpan := 2 * borderSize // nolint:gomnd
 	canvasHeight, canvasWidth := len(c.canvas), len(c.canvas[0])
-	imageHeight, imageWidth := canvasHeight*pixelSize, canvasWidth*pixelSize
+	imageHeight, imageWidth := (canvasHeight+borderSpan)*pixelSize, (canvasWidth+borderSpan)*pixelSize
 
 	upLeft, lowRight := image.Point{X: 0, Y: 0}, image.Point{X: imageWidth, Y: imageHeight}
 
@@ -83,7 +84,9 @@ func (c *Code) GetImageWithColors(pixelSize int, colorOne, colorTwo color.RGBA) 
 			if !c.canvas[y][x].value {
 				continue
 			}
-			rect := image.Rect(x*pixelSize, y*pixelSize, (x+1)*pixelSize, (y+1)*pixelSize)
+
+			rectX, rectY := x+borderSize, y+borderSize
+			rect := image.Rect(rectX*pixelSize, rectY*pixelSize, (rectX+1)*pixelSize, (rectY+1)*pixelSize)
 			draw.Draw(img, rect, image.NewUniform(colorTwo), image.Point{}, draw.Src)
 		}
 	}
@@ -92,6 +95,6 @@ func (c *Code) GetImageWithColors(pixelSize int, colorOne, colorTwo color.RGBA) 
 }
 
 // GetImage generates an image representation of the QR code using default colors (black and white)
-func (c *Code) GetImage(pixelSize int) image.Image {
-	return c.GetImageWithColors(pixelSize, color.RGBA{R: 255, G: 255, B: 255, A: 0xff}, color.RGBA{A: 0xff}) //nolint:gomnd
+func (c *Code) GetImage(pixelSize, borderSize int) image.Image {
+	return c.GetImageWithColors(pixelSize, borderSize, color.RGBA{R: 255, G: 255, B: 255, A: 0xff}, color.RGBA{A: 0xff}) //nolint:gomnd
 }
