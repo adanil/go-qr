@@ -6,12 +6,16 @@ import (
 
 	"github.com/psxzz/go-qr/pkg/algorithms"
 	"go.uber.org/multierr"
+	"golang.org/x/exp/slices"
 )
 
 const (
 	versionCodeNotRequired = 5
 	syncLinePosition       = 6
 	versionCodeOffset      = 11
+	baseScorePenalty1      = 3
+	baseScorePenalty2      = 3
+	baseScorePenalty3      = 40
 )
 
 // Correction is the level of QR code correction: L, M, Q, H
@@ -377,9 +381,9 @@ func (e *Encoder) placeData(code *Code, bytes []byte) {
 	}
 }
 
-func (e *Encoder) countPenalty(code *Code) int {
-	// TODO implement
-	return 0
+func (e *Encoder) countPenalty(code *Code) {
+	code.penaltyScore = e.penalty1(code) + e.penalty2(code) +
+		e.penalty3(code) + e.penalty4(code)
 }
 
 func (e *Encoder) placePattern(c *Code, startX, startY int, p *Pattern) {
@@ -433,4 +437,129 @@ func (e *Encoder) bitFlow(data []byte) func() bool {
 		i++
 		return bit
 	}
+}
+
+// nolint:gomnd
+func (e *Encoder) penalty1(c *Code) int {
+	var score int
+
+	// rows
+	for _, row := range c.canvas {
+		prev := row[0].value
+		count := 1
+
+		for _, m := range row[1:] {
+			if m.value != prev {
+				prev, count = m.value, 1
+				continue
+			}
+
+			count++
+			if count == 5 {
+				score += baseScorePenalty2
+			} else if count > 5 {
+				score++
+			}
+		}
+	}
+
+	// columns
+	for i := 0; i < len(c.canvas); i++ {
+		prev := c.canvas[0][i].value
+		count := 1
+
+		for j := 1; j < len(c.canvas); j++ {
+			if c.canvas[j][i].value != prev {
+				prev, count = c.canvas[j][i].value, 1
+				continue
+			}
+
+			count++
+			if count == 5 {
+				score += baseScorePenalty1
+			} else if count > 5 {
+				score++
+			}
+		}
+	}
+
+	return score
+}
+
+func (e *Encoder) penalty2(c *Code) int {
+	var blocks int
+
+	for i := 0; i < len(c.canvas)-1; i++ {
+		for j := 0; j < len(c.canvas)-1; j++ {
+			curr := c.canvas[i][j].value
+
+			adjacent := c.canvas[i][j+1].value &&
+				c.canvas[i+1][j].value &&
+				c.canvas[i+1][j+1].value
+
+			if curr == (curr && adjacent) {
+				blocks++
+			}
+		}
+	}
+
+	return baseScorePenalty2 * blocks
+}
+
+func (e *Encoder) penalty3(c *Code) int {
+	var patternsCount int
+	steps := len(c.canvas) - len(penalty3Pattern)
+
+	// rows
+	for _, row := range c.canvas {
+		for x := 0; x < steps; x++ {
+			curr := make([]bool, 0, len(penalty3Pattern))
+			for _, m := range row[x : x+len(penalty3Pattern)] {
+				curr = append(curr, m.value)
+			}
+
+			if slices.Equal(penalty3Pattern[:], curr) ||
+				slices.Equal(penalty3PatternReversed[:], curr) {
+				patternsCount++
+			}
+		}
+	}
+
+	// columns
+	for x := 0; x < len(c.canvas); x++ {
+		for y := 0; y < steps; y++ {
+			curr := make([]bool, 0, len(penalty3Pattern))
+			for i := y; i < len(penalty3Pattern); i++ {
+				curr = append(curr, c.canvas[i][x].value)
+			}
+
+			if slices.Equal(penalty3Pattern[:], curr) ||
+				slices.Equal(penalty3PatternReversed[:], curr) {
+				patternsCount++
+			}
+		}
+	}
+
+	return patternsCount * baseScorePenalty3
+}
+
+// nolint:gomnd
+func (e *Encoder) penalty4(c *Code) int {
+	var score int
+	total := len(c.canvas) * len(c.canvas)
+	black := 0
+
+	for _, row := range c.canvas {
+		for _, m := range row {
+			if !m.value {
+				black++
+			}
+		}
+	}
+
+	ratio := float64(black) / float64(total)
+	ratio = algorithms.Floor(ratio*100 - 50)
+	score = algorithms.Abs(int(ratio)) * 2
+
+	return score
 }

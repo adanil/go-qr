@@ -18,6 +18,9 @@ var (
 	fillerBytes = [2]byte{0b11101100, 0b00010001}
 	syncPixels  = [2]bool{bl, wh}
 
+	penalty3Pattern         = [11]bool{bl, wh, bl, bl, bl, wh, bl, wh, wh, wh, wh}
+	penalty3PatternReversed = [11]bool{wh, wh, wh, wh, bl, wh, bl, bl, bl, wh, bl}
+
 	versionSize = map[Correction][40]int{
 		L: {152, 272, 440, 640, 864, 1088, 1248, 1552, 1856, 2192,
 			2592, 2960, 3424, 3688, 4184, 4712, 5176, 5768, 6360, 6888,
