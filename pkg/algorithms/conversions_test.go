@@ -2,27 +2,7 @@ package algorithms
 
 import (
 	"testing"
-
-	"golang.org/x/exp/slices"
 )
-
-func TestPermutations(t *testing.T) {
-	var tests = []struct {
-		input []int
-		want  [][2]int
-	}{
-		{[]int{}, [][2]int{}},
-		{[]int{1}, [][2]int{{1, 1}}},
-		{[]int{1, 2}, [][2]int{{1, 1}, {1, 2}, {2, 1}, {2, 2}}},
-		{[]int{1, 2, 3}, [][2]int{{1, 1}, {1, 2}, {1, 3}, {2, 1}, {2, 2}, {2, 3}, {3, 1}, {3, 2}, {3, 3}}},
-	}
-
-	for _, test := range tests {
-		if got := GeneratePermutations(test.input); !slices.Equal(got, test.want) {
-			t.Errorf("GeneratePermutations(%v) = %v; expected %v", test.input, got, test.want)
-		}
-	}
-}
 
 func TestToBoolArray(t *testing.T) {
 	var tests = []struct {

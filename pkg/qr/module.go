@@ -1,5 +1,6 @@
 package qr
 
+// Module is a component of QR
 type Module struct {
 	value bool
 	isSet bool

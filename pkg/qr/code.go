@@ -8,6 +8,7 @@ import (
 	"image/draw"
 )
 
+// Code stores all metadata as well as data itself about produced QR
 type Code struct {
 	version      int
 	correction   Correction

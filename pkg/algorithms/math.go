@@ -2,6 +2,20 @@ package algorithms
 
 import "golang.org/x/exp/constraints"
 
+// GeneratePermutations is a function that generates permutations of length 2 for the input slice
+func GeneratePermutations(elems []int) [][2]int {
+	lenPerms := len(elems) * len(elems)
+	perms := make([][2]int, 0, lenPerms)
+
+	for i := 0; i < len(elems); i++ {
+		for j := 0; j < len(elems); j++ {
+			perms = append(perms, [2]int{elems[i], elems[j]})
+		}
+	}
+
+	return perms
+}
+
 // Max is a generic function that returns the maximum value between two ordered elements.
 func Max[T constraints.Ordered](a, b T) T {
 	if a < b {

@@ -1,6 +1,10 @@
 package algorithms
 
-import "testing"
+import (
+	"testing"
+
+	"golang.org/x/exp/slices"
+)
 
 func Test_Floor(t *testing.T) {
 	var f32tests = []struct {
@@ -69,6 +73,24 @@ func Test_Abs(t *testing.T) {
 	for _, test := range floatTests {
 		if got := Abs(test.input); got != test.want {
 			t.Errorf("Abs(%g) = %g", test.input, got)
+		}
+	}
+}
+
+func TestPermutations(t *testing.T) {
+	var tests = []struct {
+		input []int
+		want  [][2]int
+	}{
+		{[]int{}, [][2]int{}},
+		{[]int{1}, [][2]int{{1, 1}}},
+		{[]int{1, 2}, [][2]int{{1, 1}, {1, 2}, {2, 1}, {2, 2}}},
+		{[]int{1, 2, 3}, [][2]int{{1, 1}, {1, 2}, {1, 3}, {2, 1}, {2, 2}, {2, 3}, {3, 1}, {3, 2}, {3, 3}}},
+	}
+
+	for _, test := range tests {
+		if got := GeneratePermutations(test.input); !slices.Equal(got, test.want) {
+			t.Errorf("GeneratePermutations(%v) = %v; expected %v", test.input, got, test.want)
 		}
 	}
 }
