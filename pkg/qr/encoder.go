@@ -113,19 +113,19 @@ func (e *Encoder) fillBuffer(buff *bytes.Buffer, data []byte) {
 
 	if e.version < 9 {
 		dataLen := uint8(len(data))
-		buff.WriteByte((headerNibble << 4) | ((dataLen >> 4) & Nible))
-		currByte = dataLen & Nible
+		buff.WriteByte((headerNibble << 4) | ((dataLen >> 4) & Nibble))
+		currByte = dataLen & Nibble
 	} else {
 		dataLen := uint16(len(data))
-		buff.WriteByte((headerNibble << 4) | (byte(dataLen>>12) & Nible))
+		buff.WriteByte((headerNibble << 4) | (byte(dataLen>>12) & Nibble))
 		buff.WriteByte(byte(dataLen >> 4))
-		currByte = byte(dataLen) & Nible
+		currByte = byte(dataLen) & Nibble
 	}
 
 	for _, b := range data {
-		currByte = (currByte << 4) | ((b >> 4) & Nible)
+		currByte = (currByte << 4) | ((b >> 4) & Nibble)
 		buff.WriteByte(currByte)
-		currByte = b & Nible
+		currByte = b & Nibble
 	}
 	currByte <<= 4
 	buff.WriteByte(currByte)

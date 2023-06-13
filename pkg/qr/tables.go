@@ -9,7 +9,7 @@ const (
 )
 
 const (
-	Nible        byte = 0b1111
+	Nibble       byte = 0b1111
 	Byte         byte = 0xFF
 	headerNibble byte = 0b0100
 )
