@@ -48,7 +48,7 @@ func (e *Encoder) dataEncode(text string) ([]byte, error) {
 	}
 	e.version = codeVersion
 
-	currBuff := bytes.NewBuffer(make([]byte, 0, len(text)+10))
+	currBuff := bytes.NewBuffer(make([]byte, 0, len(text)+10)) // nolint:gomnd
 	e.fillBuffer(currBuff, []byte(text))
 
 	blocks := e.divideIntoBlocks(currBuff)
@@ -113,19 +113,19 @@ func (e *Encoder) fillBuffer(buff *bytes.Buffer, data []byte) {
 
 	if e.version < 9 {
 		dataLen := uint8(len(data))
-		buff.WriteByte((headerNibble << 4) | ((dataLen >> 4) & Nibble))
-		currByte = dataLen & Nibble
+		buff.WriteByte((headerNibble << 4) | ((dataLen >> 4) & nibble))
+		currByte = dataLen & nibble
 	} else {
 		dataLen := uint16(len(data))
-		buff.WriteByte((headerNibble << 4) | (byte(dataLen>>12) & Nibble))
+		buff.WriteByte((headerNibble << 4) | (byte(dataLen>>12) & nibble))
 		buff.WriteByte(byte(dataLen >> 4))
-		currByte = byte(dataLen) & Nibble
+		currByte = byte(dataLen) & nibble
 	}
 
 	for _, b := range data {
-		currByte = (currByte << 4) | ((b >> 4) & Nibble)
+		currByte = (currByte << 4) | ((b >> 4) & nibble)
 		buff.WriteByte(currByte)
-		currByte = b & Nibble
+		currByte = b & nibble
 	}
 	currByte <<= 4
 	buff.WriteByte(currByte)
@@ -300,7 +300,7 @@ func (e *Encoder) placeMask(code *Code) {
 		i++
 	}
 
-	code.canvas[code.size-8][8].Set(false) // This module is always black
+	code.canvas[code.size-8][8].Set(true) // This module is always black
 
 	for x, y := code.size-8, 8; x < code.size; x++ {
 		code.canvas[y][x].Set(codeBits[i])
