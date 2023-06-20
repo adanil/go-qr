@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	defaultPixelSize  = 40
-	defaultBorderSize = 4
+	imageSize = 1480
 )
 
 func main() {
@@ -25,7 +24,7 @@ func main() {
 	fmt.Printf("code: %v\n", code)
 
 	white, pink := color.RGBA{R: 255, G: 255, B: 255, A: 0xff}, color.RGBA{R: 227, G: 61, B: 148, A: 0xff} //nolint:gomnd
-	img := code.GetImageWithColors(defaultPixelSize, defaultBorderSize, white, pink)
+	img := code.GetImageWithColors(imageSize, white, pink)
 
 	f, _ := os.Create("qr.png")
 	err = png.Encode(f, img)
