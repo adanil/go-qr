@@ -300,7 +300,7 @@ func (e *Encoder) placeMask(code *Code) {
 		i++
 	}
 
-	code.canvas[code.size-8][8].Set(true) // This module is always black
+	code.canvas[code.size-8][8].Set(false) // This module is always black
 
 	for x, y := code.size-8, 8; x < code.size; x++ {
 		code.canvas[y][x].Set(codeBits[i])
