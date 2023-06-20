@@ -14,8 +14,8 @@ const (
 )
 
 var (
-	fillerBytes = [2]byte{0b11101100, 0b00010001}
-	syncPixels  = [2]bool{bl, wh}
+	fillerBytes  = [2]byte{0b11101100, 0b00010001}
+	timingPixels = [2]bool{bl, wh}
 
 	penalty3Pattern         = [11]bool{bl, wh, bl, bl, bl, wh, bl, wh, wh, wh, wh}
 	penalty3PatternReversed = [11]bool{wh, wh, wh, wh, bl, wh, bl, bl, bl, wh, bl}

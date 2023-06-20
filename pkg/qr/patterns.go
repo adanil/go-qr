@@ -12,12 +12,12 @@ type Pattern struct {
 }
 
 const (
-	searchPatternSize    = 8
+	finderPatternSize    = 8
 	alignmentPatternSize = 5
 )
 
 var (
-	searchPatternTL = Pattern{
+	finderPatternTL = Pattern{
 		data: [][]bool{
 			{bl, bl, bl, bl, bl, bl, bl, wh},
 			{bl, wh, wh, wh, wh, wh, bl, wh},
@@ -28,11 +28,11 @@ var (
 			{bl, bl, bl, bl, bl, bl, bl, wh},
 			{wh, wh, wh, wh, wh, wh, wh, wh},
 		},
-		xSize: searchPatternSize,
-		ySize: searchPatternSize,
+		xSize: finderPatternSize,
+		ySize: finderPatternSize,
 	}
 
-	searchPatternTR = Pattern{
+	finderPatternTR = Pattern{
 		data: [][]bool{
 			{wh, bl, bl, bl, bl, bl, bl, bl},
 			{wh, bl, wh, wh, wh, wh, wh, bl},
@@ -43,11 +43,11 @@ var (
 			{wh, bl, bl, bl, bl, bl, bl, bl},
 			{wh, wh, wh, wh, wh, wh, wh, wh},
 		},
-		xSize: searchPatternSize,
-		ySize: searchPatternSize,
+		xSize: finderPatternSize,
+		ySize: finderPatternSize,
 	}
 
-	searchPatternBL = Pattern{
+	finderPatternBL = Pattern{
 		data: [][]bool{
 			{wh, wh, wh, wh, wh, wh, wh, wh},
 			{bl, bl, bl, bl, bl, bl, bl, wh},
@@ -58,8 +58,8 @@ var (
 			{bl, wh, wh, wh, wh, wh, bl, wh},
 			{bl, bl, bl, bl, bl, bl, bl, wh},
 		},
-		xSize: searchPatternSize,
-		ySize: searchPatternSize,
+		xSize: finderPatternSize,
+		ySize: finderPatternSize,
 	}
 
 	alignmentPattern = Pattern{

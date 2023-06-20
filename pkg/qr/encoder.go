@@ -3,6 +3,7 @@ package qr
 import (
 	"bytes"
 	"fmt"
+	"sync"
 
 	"github.com/psxzz/go-qr/pkg/algorithms"
 	"go.uber.org/multierr"
@@ -11,7 +12,7 @@ import (
 
 const (
 	versionCodeNotRequired = 5
-	syncLinePosition       = 6
+	timingPosition         = 6
 	versionCodeOffset      = 11
 	baseScorePenalty1      = 3
 	baseScorePenalty2      = 3
@@ -59,23 +60,38 @@ func (e *Encoder) dataEncode(text string) ([]byte, error) {
 }
 
 func (e *Encoder) generateCode(data []byte) *Code {
-	var currentCode *Code
+	var (
+		currentCode *Code
+		wg          sync.WaitGroup
+	)
+	codes := make(chan *Code, e.maxMask-e.minMask)
 
+	wg.Add(e.maxMask - e.minMask)
 	for mask := e.minMask; mask < e.maxMask; mask++ {
-		code := newCode(data, e.level, e.version, mask)
+		go func(mask int) {
+			defer wg.Done()
+			code := newCode(data, e.level, e.version, mask)
 
-		e.placeSearchPatterns(code)
-		e.placeAlignments(code)
-		e.placeSync(code)
+			e.placeFinderPatterns(code)
+			e.placeAlignments(code)
+			e.placeTimings(code)
 
-		if e.version > versionCodeNotRequired {
-			e.placeVersion(code)
-		}
+			if e.version > versionCodeNotRequired {
+				e.placeVersion(code)
+			}
 
-		e.placeMask(code)
-		e.placeData(code, data)
-		e.countPenalty(code)
+			e.placeMask(code)
+			e.placeData(code, data)
+			e.countPenalty(code)
 
+			codes <- code
+		}(mask)
+	}
+
+	wg.Wait()
+	close(codes)
+
+	for code := range codes {
 		if currentCode == nil || code.penaltyScore < currentCode.penaltyScore {
 			currentCode = code
 		}
@@ -227,10 +243,10 @@ func (e *Encoder) mergeBlocks(blocks [][]byte, correctionBlocks [][]byte) []byte
 	return result.Bytes()
 }
 
-func (e *Encoder) placeSearchPatterns(code *Code) {
-	e.placePattern(code, 0, 0, &searchPatternTL)                               // Top left corner
-	e.placePattern(code, 0, code.size-searchPatternTR.xSize, &searchPatternTR) // Top right
-	e.placePattern(code, code.size-searchPatternBL.ySize, 0, &searchPatternBL) // Bottom left
+func (e *Encoder) placeFinderPatterns(code *Code) {
+	e.placePattern(code, 0, 0, &finderPatternTL)                               // Top left corner
+	e.placePattern(code, 0, code.size-finderPatternTR.xSize, &finderPatternTR) // Top right
+	e.placePattern(code, code.size-finderPatternBL.ySize, 0, &finderPatternBL) // Bottom left
 }
 
 func (e *Encoder) placeAlignments(code *Code) {
@@ -243,25 +259,25 @@ func (e *Encoder) placeAlignments(code *Code) {
 	}
 }
 
-func (e *Encoder) placeSync(code *Code) {
-	lenSyncPixels := len(syncPixels)
-	syncEnd := code.size - 7 // nolint:gomnd
+func (e *Encoder) placeTimings(code *Code) {
+	lenTimingPixels := len(timingPixels)
+	timingEnd := code.size - 7 // nolint:gomnd
 
 	var i, locX, locY int
 	// Vertical sync border
-	for i, locX, locY = 0, 6, 8; locY < syncEnd; locY++ {
+	for i, locX, locY = 0, 6, 8; locY < timingEnd; locY++ {
 		if !code.canvas[locY][locX].isSet {
-			code.canvas[locY][locX].Set(syncPixels[i])
+			code.canvas[locY][locX].Set(timingPixels[i])
 		}
-		i = (i + 1) % lenSyncPixels
+		i = (i + 1) % lenTimingPixels
 	}
 
 	// Horizontal sync border
-	for i, locX, locY = 0, 8, 6; locX < syncEnd; locX++ {
+	for i, locX, locY = 0, 8, 6; locX < timingEnd; locX++ {
 		if !code.canvas[locY][locX].isSet {
-			code.canvas[locY][locX].Set(syncPixels[i])
+			code.canvas[locY][locX].Set(timingPixels[i])
 		}
-		i = (i + 1) % lenSyncPixels
+		i = (i + 1) % lenTimingPixels
 	}
 }
 
@@ -332,7 +348,7 @@ func (e *Encoder) placeData(code *Code, bytes []byte) {
 	xl, xr := code.size-2, code.size-1 // nolint:gomnd
 	upwards := true
 	for xl >= 0 {
-		if xr == syncLinePosition { // skip vertical synchronization line
+		if xr == timingPosition { // skip vertical timing
 			xl, xr = xl-1, xr-1
 		}
 
