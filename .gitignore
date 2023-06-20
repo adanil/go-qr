@@ -17,3 +17,5 @@ vendor/
 .idea/
 bin/
 qr.png
+out/
+Benchmark_test.go

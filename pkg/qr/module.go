@@ -6,7 +6,7 @@ type Module struct {
 	isSet bool
 }
 
-// Sets the Module color
+// Set the Module color
 func (m *Module) Set(value bool) {
 	m.value = value
 	m.isSet = true

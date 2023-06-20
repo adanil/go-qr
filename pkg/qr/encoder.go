@@ -48,7 +48,7 @@ func (e *Encoder) dataEncode(text string) ([]byte, error) {
 	}
 	e.version = codeVersion
 
-	currBuff := bytes.NewBuffer(make([]byte, 0))
+	currBuff := bytes.NewBuffer(make([]byte, 0, len(text)+10))
 	e.fillBuffer(currBuff, []byte(text))
 
 	blocks := e.divideIntoBlocks(currBuff)
@@ -113,19 +113,19 @@ func (e *Encoder) fillBuffer(buff *bytes.Buffer, data []byte) {
 
 	if e.version < 9 {
 		dataLen := uint8(len(data))
-		buff.WriteByte((headerNibble << 4) | ((dataLen >> 4) & Nible))
-		currByte = dataLen & Nible
+		buff.WriteByte((headerNibble << 4) | ((dataLen >> 4) & Nibble))
+		currByte = dataLen & Nibble
 	} else {
 		dataLen := uint16(len(data))
-		buff.WriteByte((headerNibble << 4) | (byte(dataLen>>12) & Nible))
+		buff.WriteByte((headerNibble << 4) | (byte(dataLen>>12) & Nibble))
 		buff.WriteByte(byte(dataLen >> 4))
-		currByte = byte(dataLen) & Nible
+		currByte = byte(dataLen) & Nibble
 	}
 
 	for _, b := range data {
-		currByte = (currByte << 4) | ((b >> 4) & Nible)
+		currByte = (currByte << 4) | ((b >> 4) & Nibble)
 		buff.WriteByte(currByte)
-		currByte = b & Nible
+		currByte = b & Nibble
 	}
 	currByte <<= 4
 	buff.WriteByte(currByte)
@@ -167,26 +167,19 @@ func (e *Encoder) generateCorrectionBlocks(dataBlocks [][]byte) [][]byte {
 	result := make([][]byte, 0, len(dataBlocks))
 	for _, block := range dataBlocks {
 		correctionBytesNum := algorithms.Max(len(block), coefficientsNum)
-		correctionBytes := make([]byte, 0, correctionBytesNum+len(block))
-		correctionBytes = append(correctionBytes, block...)
-
-		for i := len(correctionBytes); i < correctionBytesNum; i++ {
-			correctionBytes = append(correctionBytes, 0)
-		}
+		correctionBytes := make([]byte, correctionBytesNum+2*len(block))
+		copy(correctionBytes, block)
 
 		for i := 0; i < len(block); i++ {
 			a := correctionBytes[0]
-			correctionBytes = append(correctionBytes[1:], 0)
+			correctionBytes = correctionBytes[1:]
 
 			if a == 0 {
 				continue
 			}
 
-			b := int(invGF[a])
-			for j := 0; j < coefficientsNum; j++ {
-				c := (coefficients[j] + b) % 255
-				t := GF[c]
-				correctionBytes[j] ^= t
+			for j, c := range coefficients {
+				correctionBytes[j] ^= GF[c+invGF[a]]
 			}
 		}
 
@@ -197,12 +190,12 @@ func (e *Encoder) generateCorrectionBlocks(dataBlocks [][]byte) [][]byte {
 }
 
 func (e *Encoder) mergeBlocks(blocks [][]byte, correctionBlocks [][]byte) []byte {
-	result := bytes.NewBuffer(make([]byte, 0))
-
 	maxBlockSize := 0
 	for _, block := range blocks {
 		maxBlockSize = algorithms.Max(maxBlockSize, len(block))
 	}
+
+	result := bytes.NewBuffer(make([]byte, 0, 2*maxBlockSize*len(blocks)))
 
 	currByteIdx := 0
 	for currByteIdx < maxBlockSize {

@@ -88,10 +88,10 @@ func Test_fillBuffer(t *testing.T) {
 	header := b[0] >> 4
 	require.Equal(t, headerNibble, header)
 
-	actualLen := int(b[0]&Nible | b[1]>>4)
+	actualLen := int(b[0]&Nibble | b[1]>>4)
 	require.Equal(t, len(data), actualLen)
 
-	lastByte := b[10] | b[9]&Nible
+	lastByte := b[10] | b[9]&Nibble
 	require.Equal(t, data[len(data)-1], lastByte)
 
 }
@@ -139,4 +139,25 @@ func Test_mergeBlocks(t *testing.T) {
 	e := Encoder{}
 	result := e.mergeBlocks(blocks1, correctionBlocks1)
 	require.Equal(t, expected1, result)
+}
+
+func BenchmarkEncode(b *testing.B) {
+	inputs := [...]string{"https://github.com/psxzz/go-qr",
+		"❤️ 💔 💌 💕 💞 💓 💗 💖 💘 💝 💟 💜 💛 💚 💙",
+		"ثم نفس سقطت وبالتحديد،, جزيرتي باستخدام أن دنو. إذ هنا؟ الستار وتنصيب كان. أهّل ايطاليا، بريطانيا-فرنسا قد أخذ. سليمان، إتفاقية بين ما, يذكر الحدود أي بعد, معاملة بولندا، الإطلاق عل إيو.",
+		"The only unicode alphabet to use a space which isn't empty but should still act like a space.",
+		"Ｔｈｅ ｑｕｉｃｋ ｂｒｏｗｎ ｆｏｘ ｊｕｍｐｓ ｏｖｅｒ ｔｈｅ ｌａｚｙ ｄｏｇ",
+		"ヽ༼ຈل͜ຈ༽ﾉ ヽ༼ຈل͜ຈ༽ﾉ",
+		"찦차를 타고 온 펲시맨과 쑛다리 똠방각하"}
+
+	b.ReportAllocs()
+	encoder := NewEncoder()
+	for i := 0; i < b.N; i++ {
+		for _, inp := range inputs {
+			_, err := encoder.Encode(inp)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	}
 }
