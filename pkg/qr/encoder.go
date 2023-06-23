@@ -48,7 +48,7 @@ func (e *Encoder) dataEncode(text string) ([]byte, error) {
 	}
 	e.version = codeVersion
 
-	currBuff := bytes.NewBuffer(make([]byte, 0, len(text)+10))
+	currBuff := bytes.NewBuffer(make([]byte, 0, len(text)+10)) // nolint:gomnd
 	e.fillBuffer(currBuff, []byte(text))
 
 	blocks := e.divideIntoBlocks(currBuff)
