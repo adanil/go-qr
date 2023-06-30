@@ -1,5 +1,7 @@
-# go-qr
-This is a QR Encoder written in Golang, designed to generate Quick Response (QR) codes from text. The QR Encoder leverages the power of Golang to provide a simple and efficient solution for generating QR codes.
+<img src='logo.png' align='right'>
+
+# go-qr  
+A library written in Golang, designed to generate Quick Response (QR) codes from text. The library leverages the power of Golang to provide a simple and efficient solution for generating QR codes.
 
 ## Features
 
@@ -54,7 +56,8 @@ The following are the planned future enhancements for the QR Encoder:
 - **QR Decoder**: Implement a QR code decoder to decode and extract information from existing QR codes. 
 - **Code Coverage**: Increase code coverage by writing comprehensive tests to ensure the reliability and stability of the QR Encoder.
 - **Performance Benchmarking**: Conduct performance benchmarking to optimize the QR Encoder's speed and efficiency, with the main goal of becoming the fastest QR Encoder among other implementations in Go.
-- **Support for Different QR Code Formats**: alphanumeric, numeric, and kanji.
+- **Additional encoding modes**: alphanumeric, numeric, and kanji.
+- **More output formats**: JPEG, SVG.
 ## Contributing
 
 Contributions to the QR Encoder project are welcome! If you encounter any issues, have suggestions, or want to contribute improvements or new features, please feel free to submit a pull request.
@@ -64,10 +67,16 @@ Before submitting a pull request, make sure to:
 - Follow the existing code style and conventions.
 - Provide a clear and concise description of the changes made.
 
+## References
+
+- [Wikipedia](https://en.wikipedia.org/wiki/QR_code)
+- [ISO/IEC 18004:2015](https://www.iso.org/standard/62021.html)
+
 ## License
 
 The QR Encoder is open-source and released under the [MIT License](https://opensource.org/license/mit/). Feel free to use, modify, and distribute it as per the license terms.
 
 ## Credits
 
-The QR Encoder is developed and maintained by [@psxzz](https://github.com/psxzz) and [@adanil](https://github.com/adanil).
+The go-qr library is developed and maintained by [@psxzz](https://github.com/psxzz) and [@adanil](https://github.com/adanil). 
+"QR Code" is a registered Trade Mark of Denso Wave Incorporated.
