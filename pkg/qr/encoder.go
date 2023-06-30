@@ -3,7 +3,6 @@ package qr
 import (
 	"bytes"
 	"fmt"
-	"sync"
 
 	"github.com/psxzz/go-qr/pkg/algorithms"
 	"go.uber.org/multierr"
@@ -60,38 +59,23 @@ func (e *Encoder) dataEncode(text string) ([]byte, error) {
 }
 
 func (e *Encoder) generateCode(data []byte) *Code {
-	var (
-		currentCode *Code
-		wg          sync.WaitGroup
-	)
-	codes := make(chan *Code, e.maxMask-e.minMask)
+	var currentCode *Code
 
-	wg.Add(e.maxMask - e.minMask)
 	for mask := e.minMask; mask < e.maxMask; mask++ {
-		go func(mask int) {
-			defer wg.Done()
-			code := newCode(data, e.level, e.version, mask)
+		code := newCode(data, e.level, e.version, mask)
 
-			e.placeFinderPatterns(code)
-			e.placeAlignments(code)
-			e.placeTimings(code)
+		e.placeFinderPatterns(code)
+		e.placeAlignments(code)
+		e.placeTimings(code)
 
-			if e.version > versionCodeNotRequired {
-				e.placeVersion(code)
-			}
+		if e.version > versionCodeNotRequired {
+			e.placeVersion(code)
+		}
 
-			e.placeMask(code)
-			e.placeData(code, data)
-			e.countPenalty(code)
+		e.placeMask(code)
+		e.placeData(code, data)
+		e.countPenalty(code)
 
-			codes <- code
-		}(mask)
-	}
-
-	wg.Wait()
-	close(codes)
-
-	for code := range codes {
 		if currentCode == nil || code.penaltyScore < currentCode.penaltyScore {
 			currentCode = code
 		}
