@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"image/color"
 	"image/png"
+	"log"
 	"os"
 
 	"github.com/psxzz/go-qr/pkg/qr"
 )
 
 const (
-	imageSize = 1480
+	imageSize = 500
 )
 
 func main() {
@@ -24,7 +25,10 @@ func main() {
 	fmt.Printf("code: %v\n", code)
 
 	white, pink := color.RGBA{R: 255, G: 255, B: 255, A: 0xff}, color.RGBA{R: 227, G: 61, B: 148, A: 0xff} //nolint:gomnd
-	img := code.GetImageWithColors(imageSize, white, pink)
+	img, err := code.GetImageWithColors(imageSize, white, pink)
+	if err != nil {
+		log.Fatalf("couldn't create image: %v\n", err)
+	}
 
 	f, _ := os.Create("qr.png")
 	err = png.Encode(f, img)

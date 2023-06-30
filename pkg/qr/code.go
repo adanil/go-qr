@@ -69,10 +69,13 @@ func (c *Code) String() string {
 	return buf.String()
 }
 
-func (c *Code) GetImageWithColors(imageSize int, colorOne, colorTwo color.RGBA) image.Image {
+func (c *Code) GetImageWithColors(imageSize int, colorOne, colorTwo color.RGBA) (image.Image, error) {
 	moduleSize := imageSize / (len(c.canvas) + borderModules*2)
+	if moduleSize == 0 {
+		return nil, ErrTooSmallImageSize
+	}
 	remainPixels := imageSize - moduleSize*(len(c.canvas)+borderModules*2)
-	borderSize := borderModules*moduleSize + remainPixels/borderModules
+	borderSize := borderModules*moduleSize + remainPixels/2 // nolint:gomnd
 
 	canvasHeight, canvasWidth := len(c.canvas), len(c.canvas[0])
 	imageHeight, imageWidth := imageSize, imageSize
@@ -94,10 +97,10 @@ func (c *Code) GetImageWithColors(imageSize int, colorOne, colorTwo color.RGBA) 
 		}
 	}
 
-	return img
+	return img, nil
 }
 
 // GetImage generates an image representation of the QR code using default colors (black and white)
-func (c *Code) GetImage(imageSize int) image.Image {
+func (c *Code) GetImage(imageSize int) (image.Image, error) {
 	return c.GetImageWithColors(imageSize, color.RGBA{R: 255, G: 255, B: 255, A: 0xff}, color.RGBA{A: 0xff}) //nolint:gomnd
 }
