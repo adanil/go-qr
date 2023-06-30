@@ -51,16 +51,16 @@ img, _ := code.GetImageWithColors(imageSize, white, pink)
 ```
 ## Roadmap
 
-The following are the planned future enhancements for the QR Encoder:
+The following are the planned future enhancements for the go-qr library:
 
 - **QR Decoder**: Implement a QR code decoder to decode and extract information from existing QR codes. 
-- **Code Coverage**: Increase code coverage by writing comprehensive tests to ensure the reliability and stability of the QR Encoder.
-- **Performance Benchmarking**: Conduct performance benchmarking to optimize the QR Encoder's speed and efficiency, with the main goal of becoming the fastest QR Encoder among other implementations in Go.
+- **Code Coverage**: Increase code coverage by writing comprehensive tests to ensure the reliability and stability of the library.
+- **Performance Benchmarking**: Conduct performance benchmarking to optimize the library speed and efficiency, with the main goal of becoming the fastest library among other implementations in Go.
 - **Additional encoding modes**: alphanumeric, numeric, and kanji.
 - **More output formats**: JPEG, SVG.
 ## Contributing
 
-Contributions to the QR Encoder project are welcome! If you encounter any issues, have suggestions, or want to contribute improvements or new features, please feel free to submit a pull request.
+Contributions to the go-qr project are welcome! If you encounter any issues, have suggestions, or want to contribute improvements or new features, please feel free to submit a pull request.
 
 Before submitting a pull request, make sure to:
 
@@ -74,7 +74,7 @@ Before submitting a pull request, make sure to:
 
 ## License
 
-The QR Encoder is open-source and released under the [MIT License](https://opensource.org/license/mit/). Feel free to use, modify, and distribute it as per the license terms.
+This library is open-source and released under the [MIT License](https://opensource.org/license/mit/). Feel free to use, modify, and distribute it as per the license terms.
 
 ## Credits
 
