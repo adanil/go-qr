@@ -179,7 +179,7 @@ func (e *Encoder) generateCorrectionBlocks(dataBlocks [][]byte) [][]byte {
 			}
 
 			for j, c := range coefficients {
-				correctionBytes[j] ^= GF[c+invGF[a]]
+				correctionBytes[j] ^= gf[c+invGF[a]]
 			}
 		}
 
@@ -228,9 +228,9 @@ func (e *Encoder) mergeBlocks(blocks [][]byte, correctionBlocks [][]byte) []byte
 }
 
 func (e *Encoder) placeFinderPatterns(code *Code) {
-	e.placePattern(code, 0, 0, &finderPatternTL)                               // Top left corner
-	e.placePattern(code, 0, code.size-finderPatternTR.xSize, &finderPatternTR) // Top right
-	e.placePattern(code, code.size-finderPatternBL.ySize, 0, &finderPatternBL) // Bottom left
+	e.placePattern(code, 0, 0, &finderPatternTL)
+	e.placePattern(code, 0, code.size-finderPatternTR.xSize, &finderPatternTR)
+	e.placePattern(code, code.size-finderPatternBL.ySize, 0, &finderPatternBL)
 }
 
 func (e *Encoder) placeAlignments(code *Code) {
@@ -248,7 +248,7 @@ func (e *Encoder) placeTimings(code *Code) {
 	timingEnd := code.size - 7 // nolint:gomnd
 
 	var i, locX, locY int
-	// Vertical sync border
+	// Vertical timing pattern
 	for i, locX, locY = 0, 6, 8; locY < timingEnd; locY++ {
 		if !code.canvas[locY][locX].isSet {
 			code.canvas[locY][locX].Set(timingPixels[i])
@@ -256,7 +256,7 @@ func (e *Encoder) placeTimings(code *Code) {
 		i = (i + 1) % lenTimingPixels
 	}
 
-	// Horizontal sync border
+	// Horizontal timing patter
 	for i, locX, locY = 0, 8, 6; locX < timingEnd; locX++ {
 		if !code.canvas[locY][locX].isSet {
 			code.canvas[locY][locX].Set(timingPixels[i])
@@ -275,8 +275,8 @@ func (e *Encoder) placeVersion(code *Code) {
 		for x_offset, bit := range bits[2:] {
 			x, y := startX+x_offset, startY+y_offset
 
-			code.canvas[y][x].Set(bit) // Bottom left code
-			code.canvas[x][y].Set(bit) // Top right code
+			code.canvas[y][x].Set(bit) // Version code in bottom left corner
+			code.canvas[x][y].Set(bit) // Version code in top right corner
 		}
 	}
 
@@ -293,7 +293,7 @@ func (e *Encoder) placeMask(code *Code) {
 	codeBits = append(codeBits, msb[1:]...)
 	codeBits = append(codeBits, lsb[:]...)
 
-	// Bottom left + Top right
+	// Mask code placement next to bottom left and top right finder patterns
 	i := 0
 	for x, y := 8, code.size-1; y > code.size-8; y-- {
 		code.canvas[y][x].Set(codeBits[i])
@@ -307,7 +307,7 @@ func (e *Encoder) placeMask(code *Code) {
 		i++
 	}
 
-	// Top left
+	// Mask code placement next to top left finder pattern
 	i = 0
 	for x, y := 0, 8; x < 9; x++ {
 		if !code.canvas[y][x].isSet {
@@ -327,10 +327,10 @@ func (e *Encoder) placeMask(code *Code) {
 
 func (e *Encoder) placeData(code *Code, bytes []byte) {
 	mask := code.maskF
-	nextBit := e.bitFlow(bytes) // convert encoded data to bit flow
+	nextBit := e.bitFlow(bytes)
 
 	xl, xr := code.size-2, code.size-1 // nolint:gomnd
-	upwards := true
+	upwards := true                    // current encoding direction
 	for xl >= 0 {
 		if xr == timingPosition { // skip vertical timing
 			xl, xr = xl-1, xr-1
@@ -379,7 +379,7 @@ func (e *Encoder) countPenalty(code *Code) {
 		e.penalty3(code) + e.penalty4(code)
 }
 
-func (e *Encoder) placePattern(c *Code, startX, startY int, p *Pattern) {
+func (e *Encoder) placePattern(c *Code, startX, startY int, p *qrPattern) {
 	pxLen, pyLen := p.xSize, p.ySize
 
 	if !e.isUnused(c, startX, startY, startX+pxLen, startY+pyLen) {
@@ -394,8 +394,6 @@ func (e *Encoder) placePattern(c *Code, startX, startY int, p *Pattern) {
 }
 
 func (e *Encoder) isUnused(c *Code, startX, startY, endX, endY int) bool {
-
-	// false, if arguments are out of canvas bounds
 	if startX < 0 || startX >= c.size ||
 		startY < 0 || startY >= c.size ||
 		endX > c.size || endY > c.size {
@@ -436,7 +434,7 @@ func (e *Encoder) bitFlow(data []byte) func() bool {
 func (e *Encoder) penalty1(c *Code) int {
 	var score int
 
-	// rows
+	// penalty evaluation for rows
 	for _, row := range c.canvas {
 		prev := row[0].value
 		count := 1
@@ -456,7 +454,7 @@ func (e *Encoder) penalty1(c *Code) int {
 		}
 	}
 
-	// columns
+	// penalty evaluation for rows
 	for i := 0; i < len(c.canvas); i++ {
 		prev := c.canvas[0][i].value
 		count := 1
@@ -503,7 +501,7 @@ func (e *Encoder) penalty3(c *Code) int {
 	var patternsCount int
 	steps := len(c.canvas) - len(penalty3Pattern)
 
-	// rows
+	// penalty evaluation for rows
 	for _, row := range c.canvas {
 		for x := 0; x < steps; x++ {
 			curr := make([]bool, 0, len(penalty3Pattern))
@@ -518,7 +516,7 @@ func (e *Encoder) penalty3(c *Code) int {
 		}
 	}
 
-	// columns
+	// penalty evaluation for columns
 	for x := 0; x < len(c.canvas); x++ {
 		for y := 0; y < steps; y++ {
 			curr := make([]bool, 0, len(penalty3Pattern))

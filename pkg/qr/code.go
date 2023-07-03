@@ -6,9 +6,10 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"strings"
 )
 
-const borderModules = 4
+const quietZoneModules = 4
 
 // Code stores all metadata as well as data itself about produced QR
 type Code struct {
@@ -19,17 +20,16 @@ type Code struct {
 	penaltyScore int
 
 	alignments []int
-
-	canvas [][]Module
-	size   int
+	canvas     [][]qrModule
+	size       int
 }
 
 func newCode(data []byte, correction Correction, version int, mask int) *Code {
 	canvasSize := 4*(version+1) + 17 // nolint:gomnd
 
-	var canvas [][]Module = make([][]Module, canvasSize)
+	var canvas [][]qrModule = make([][]qrModule, canvasSize)
 	for i := range canvas {
-		canvas[i] = make([]Module, canvasSize)
+		canvas[i] = make([]qrModule, canvasSize)
 	}
 
 	code := &Code{
@@ -55,13 +55,26 @@ func (c *Code) String() string {
 	fmt.Fprintf(&buf, "\nerror correction: %v", c.correction)
 	fmt.Fprintf(&buf, "\nmask pattern: %v", c.mask)
 	fmt.Fprintf(&buf, "\nalignments: %v", c.alignments)
-	fmt.Fprintf(&buf, "\ndata: ")
+	fmt.Fprintf(&buf, "\ncanvas: ")
+
+	for i := 0; i < quietZoneModules; i++ {
+		buf.WriteString("\n\t\t")
+		buf.WriteString(strings.Repeat("██", c.size+quietZoneModules*2))
+	}
+
+	quietZoneStr := strings.Repeat("██", quietZoneModules)
 
 	for _, row := range c.canvas {
-		buf.WriteString("\n\t\t")
+		buf.WriteString("\n\t\t" + quietZoneStr)
 		for _, v := range row {
 			fmt.Fprintf(&buf, "%v", v.String())
 		}
+		buf.WriteString(quietZoneStr)
+	}
+
+	for i := 0; i < quietZoneModules; i++ {
+		buf.WriteString("\n\t\t")
+		buf.WriteString(strings.Repeat("██", c.size+quietZoneModules*2))
 	}
 
 	buf.WriteString("\n}")
@@ -70,12 +83,12 @@ func (c *Code) String() string {
 }
 
 func (c *Code) GetImageWithColors(imageSize int, colorOne, colorTwo color.RGBA) (image.Image, error) {
-	moduleSize := imageSize / (len(c.canvas) + borderModules*2)
+	moduleSize := imageSize / (len(c.canvas) + quietZoneModules*2)
 	if moduleSize == 0 {
 		return nil, ErrTooSmallImageSize
 	}
-	remainPixels := imageSize - moduleSize*(len(c.canvas)+borderModules*2)
-	borderSize := borderModules*moduleSize + remainPixels/2 // nolint:gomnd
+	remainPixels := imageSize - moduleSize*(len(c.canvas)+quietZoneModules*2)
+	borderSize := quietZoneModules*moduleSize + remainPixels/2 // nolint:gomnd
 
 	canvasHeight, canvasWidth := len(c.canvas), len(c.canvas[0])
 	imageHeight, imageWidth := imageSize, imageSize

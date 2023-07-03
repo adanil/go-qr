@@ -1,18 +1,16 @@
 package qr
 
-// Module is a component of QR
-type Module struct {
+type qrModule struct {
 	value bool
 	isSet bool
 }
 
-// Set the Module color
-func (m *Module) Set(value bool) {
+func (m *qrModule) Set(value bool) {
 	m.value = value
 	m.isSet = true
 }
 
-func (m *Module) String() string {
+func (m *qrModule) String() string {
 	if !m.value {
 		return "██"
 	}
